@@ -69,7 +69,7 @@ app.post("/api/v1/login", async (req: Request, res: Response): Promise<any> => {
     if (!isCorrect) return res.status(403).json({ message: "Password incorrect" });
 
     const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET!, { expiresIn: "24h" });
-    res.cookie('token', token, { httpOnly: true, secure: true });
+    res.cookie('token', token, { httpOnly: true, secure: true,sameSite:"none" });
     res.status(200).json({ message: "Login successful" });
   } catch (error) {
     res.status(500).json({ error: error });
