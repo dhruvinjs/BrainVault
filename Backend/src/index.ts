@@ -50,7 +50,7 @@ app.post('/api/v1/signup', async (req: Request, res: Response): Promise<any> => 
     const newUser = await User.create({ username, password: hashedPass });
     const newBrain = await Brain.create({ userId: newUser._id });
 
-    res.status(200).json({ message: "New user created", newUser, newBrain });
+    res.status(200).json({ message: "New user created" });
   } catch (error) {
     res.status(500).json({ error: error });
   }
@@ -70,7 +70,7 @@ app.post("/api/v1/login", async (req: Request, res: Response): Promise<any> => {
 
     const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET!, { expiresIn: "24h" });
     res.cookie('token', token, { httpOnly: true, secure: true });
-    res.status(200).json({ message: "Login successful", user });
+    res.status(200).json({ message: "Login successful" });
   } catch (error) {
     res.status(500).json({ error: error });
   }
@@ -86,7 +86,6 @@ app.post('/api/v1/logout', authMiddleware, async (req: Request, res: Response) =
   }
 });
 
-// Profile Edit
 app.patch('/api/v1/profile/edit', authMiddleware, async (req: Request, res: Response): Promise<any> => {
   try {
     const { username, password } = req.body;
@@ -97,13 +96,12 @@ app.patch('/api/v1/profile/edit', authMiddleware, async (req: Request, res: Resp
     if (password) user.password = await bcrypt.hash(password, 12);
 
     await user.save();
-    res.status(200).json({ success: true, user });
+    res.status(200).json({ success: true});
   } catch (error) {
     res.status(500).json({ error: error });
   }
 });
 
-// Check User Authorization
 app.get('/api/v1/user/checkAuth', authMiddleware, async (req: Request, res: Response) => {
   try {
     //@ts-ignore
@@ -117,7 +115,6 @@ app.get('/api/v1/user/checkAuth', authMiddleware, async (req: Request, res: Resp
   }
 });
 
-// Add Content
 app.post('/api/v1/content/add', authMiddleware, async (req: Request, res: Response): Promise<any> => {
   try {
     const { title, link, type, tags } = req.body;
@@ -184,7 +181,7 @@ app.patch('/api/v1/content/update/:id', authMiddleware, async (req: Request, res
   }
 });
 
-// Delete Content
+
 app.delete('/api/v1/content/delete/:id', authMiddleware, async (req: Request, res: Response): Promise<any> => {
   try {
     const contentId = req.params.id;
