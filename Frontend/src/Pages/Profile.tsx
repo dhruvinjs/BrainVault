@@ -42,8 +42,7 @@ export function Profile() {
   const totalCount = content.length
   const twitterCount = content.filter((c) => c.type === "twitter").length
   const youtubeCount = content.filter((c) => c.type === "youtube").length
-  const otherCount = totalCount - twitterCount - youtubeCount
-
+ 
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-200 flex items-center justify-center">
@@ -132,7 +131,7 @@ export function Profile() {
 
                   <div className="flex gap-3 justify-end mt-6">
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="md"
                       text="Cancel"
                       onClick={() => setEditing(false)}
