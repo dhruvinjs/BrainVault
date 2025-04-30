@@ -14,11 +14,13 @@ import { any, z } from "zod";
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: process.env.BASE_URL, credentials: true }));
+
+app.use(cors({ origin: "", credentials: true }));
+
 
 mongoose.connect(process.env.MONGO_URL!)
   .then(() => console.log("Connected to mongo DB"))
-  .catch(err => console.log(err));
+  .catch((err:any) => console.log(err));
 
 app.listen(3000, () => console.log("Listening on PORT 3000"));
 
