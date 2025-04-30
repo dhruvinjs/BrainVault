@@ -29,7 +29,6 @@ export function Card({
   tags = [],
   onSave,
   savingState = false,
-  saved = false,
 }: CardProps) {
   const deleteContent = contentStore((s:any) => s.deleteContent)
   const isSavedInStore = contentStore((s:any) => s.isSaved(_id))

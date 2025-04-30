@@ -9,11 +9,11 @@ import { Button } from "../Components/Button"
 import { Card } from "../Components/Card"
 
 export function SavedPosts() {
-  const savedPosts = contentStore((s) => s.savedPosts)
-  const viewSavedPosts = contentStore((s) => s.viewSavedPosts)
-  const deleteSaveContents = contentStore((s) => s.deleteSaveContents)
-  const loading = contentStore((s) => s.loading)
-  const error = contentStore((s) => s.error)
+  const savedPosts = contentStore((s:any) => s.savedPosts)
+  const viewSavedPosts = contentStore((s:any) => s.viewSavedPosts)
+  const deleteSaveContents = contentStore((s:any) => s.deleteSaveContents)
+  const loading = contentStore((s:any) => s.loading)
+  const error = contentStore((s:any) => s.error)
 
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [deleteInProgress, setDeleteInProgress] = useState<string | null>(null)
@@ -65,7 +65,7 @@ export function SavedPosts() {
 
   // console.log(searchTerm)
   const filteredPosts = searchTerm
-  ? savedPosts.filter((post) =>
+  ? savedPosts.filter((post:any) =>
       post.contentId.title
         .toLowerCase()
         .includes(searchTerm.toLowerCase())
@@ -186,7 +186,7 @@ export function SavedPosts() {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {filteredPosts.map((post) => (
+              {filteredPosts.map((post:any) => (
                 <div
                   key={post._id}
                   className="relative flex flex-col bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition"

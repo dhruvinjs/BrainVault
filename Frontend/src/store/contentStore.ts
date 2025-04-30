@@ -131,7 +131,7 @@ export const contentStore = create((set, get:any) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get("/saved-posts");
-      // console.log(res.data)
+      //@ts-ignore
       const savedContentId=res.data.map((id:SavedPost)=>res.data._id)
       set({ savedPosts: res.data,savedPostIds:savedContentId });
 

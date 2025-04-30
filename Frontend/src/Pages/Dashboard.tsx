@@ -17,13 +17,12 @@ export function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [linkInputOpen, setLinkInputOpen] = useState(false)
 
-  const viewContent = contentStore((s) => s.viewContent)
-  const addContent = contentStore((s) => s.addContent)
-  const updateContent = contentStore((s) => s.updateContent)
-  const loading = contentStore((s) => s.loading)
-  const saveContent = contentStore((s) => s.saveContent)
-  const isSaved = contentStore((s) => s.isSaved)
-
+  const viewContent = contentStore((s:any) => s.viewContent)
+  const addContent = contentStore((s:any) => s.addContent)
+  const updateContent = contentStore((s:any) => s.updateContent)
+  const loading = contentStore((s:any) => s.loading)
+  const saveContent = contentStore((s:any) => s.saveContent)
+  
   //@ts-ignore
   const content: Content[] = contentStore((s) => s.content)
 
@@ -170,7 +169,6 @@ export function Dashboard() {
                   tags={item.tags || []}
                   onEdit={() => handleEditClick(item)}
                   onSave={() => handleSave(item._id!)}
-                  saved={isSaved(item._id!)}
                   savingState={loading && saveSuccess === item._id}
                 />
               ))
