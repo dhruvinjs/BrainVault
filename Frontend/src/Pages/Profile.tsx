@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { userAuth } from "../store/userAuth"
 import { contentStore, Content } from "../store/contentStore"
 import { Button } from "../Components/Button"
-import { Loader2, User, Camera, Save, X, CheckCircle, ArrowLeft } from "lucide-react"
+import { Loader2, Camera, Save, X, CheckCircle, ArrowLeft } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 export function Profile() {
@@ -15,8 +15,8 @@ export function Profile() {
   const passwordRef = useRef<HTMLInputElement>(null)
 
   // Content store for stats
-  const viewContent = contentStore((s) => s.viewContent)
-  const content: Content[] = contentStore((s) => s.content) ?? []
+  const viewContent = contentStore((s:any) => s.viewContent) 
+  const content: Content[] = contentStore((s:any) => s.content) ?? []
 
   // fetch auth + content on mount
   useEffect(() => {
@@ -102,6 +102,7 @@ export function Profile() {
                       Username
                     </label>
                     <input
+                      placeholder=""
                       ref={usernameRef}
                       defaultValue={user.username}
                       type="text"

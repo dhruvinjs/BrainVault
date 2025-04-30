@@ -10,7 +10,7 @@ interface PasteLinkModalProps {
 
 }
 
-export function PasteLinkModal({ open, setOpen,onSubmit }: PasteLinkModalProps) {
+export function PasteLinkModal({ open, setOpen, }: PasteLinkModalProps) {
   const [link, setLink] = useState("")
   
     const nav=useNavigate()

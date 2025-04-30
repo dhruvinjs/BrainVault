@@ -24,7 +24,7 @@ export interface SavedPost{
   userId:string,
 }
 
-export const contentStore = create((set, get) => ({
+export const contentStore = create((set, get:any) => ({
   content: null,        
   loading: false,       // loading state
   modalOpen: false,     // modal toggle state
@@ -34,6 +34,7 @@ export const contentStore = create((set, get) => ({
 
 
   toggleModal: () => {
+    //@ts-ignore
     const current = get().modalOpen
     set({ modalOpen: !current });
   },
@@ -42,6 +43,7 @@ export const contentStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       await api.post("/content/add", data);
+      //@ts-ignore
       await get().viewContent();
     } catch (err: any) {
       const errMsg =
@@ -148,9 +150,9 @@ export const contentStore = create((set, get) => ({
     set({ loading: true });
     try {
       await api.delete(`/saved-posts/${id}`);
-  
+      //@ts-ignore
       set((state) => ({
-        savedPostIds: state.savedPostIds.filter((postId) => postId !== id),
+        savedPostIds: state.savedPostIds.filter((postId:string) => postId !== id),
       }));
   
       await get().viewSavedPosts(); // Optional: this refreshes the savedPosts too

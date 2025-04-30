@@ -31,9 +31,9 @@ export function Card({
   savingState = false,
   saved = false,
 }: CardProps) {
-  const deleteContent = contentStore((s) => s.deleteContent)
-  const isSavedInStore = contentStore((s) => s.isSaved(_id))
-  const saveContent = contentStore((s) => s.saveContent)
+  const deleteContent = contentStore((s:any) => s.deleteContent)
+  const isSavedInStore = contentStore((s:any) => s.isSaved(_id))
+  const saveContent = contentStore((s:any) => s.saveContent)
 
   const [deleteModal, setDeleteModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)

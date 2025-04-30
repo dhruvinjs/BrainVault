@@ -1,7 +1,6 @@
 
-import type React from "react"
 
-import { useState,useRef } from "react"
+import { useRef } from "react"
 import { Button, InputBoxes } from "../Components"
 import { useNavigate } from "react-router-dom"
 import { userAuth } from "../store/userAuth"

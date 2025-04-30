@@ -10,7 +10,7 @@ export interface  userCreds{
 export interface UserAuth{
     user:userCreds | null,
     loading : boolean,
-    error: string | null,
+    error?: string,
     signup: (formData: userCreds) => Promise<boolean>;
     login: (formData: userCreds) => Promise<boolean>;
     logout: () => Promise<boolean>;
@@ -18,15 +18,15 @@ export interface UserAuth{
     editProfile:(formData:any)=>Promise<boolean>
 }
 
-export const userAuth = create<UserAuth>((set,get)=>({
+export const userAuth = create<UserAuth>((set,_get)=>({
     user:null,
     loading : false,
-    error: null,
+    
 
     signup : async(formData:userCreds) => {
-       set({loading:true,error:null})
+       set({loading:true})
         try {
-            const res = await api.post("/signup",formData)
+             await api.post("/signup",formData)
             set({loading:false})
             return true
         } catch (err:any) {
@@ -37,7 +37,7 @@ export const userAuth = create<UserAuth>((set,get)=>({
     },
 
     login : async(formData) => {
-        set({loading:true,error:null})
+        set({loading:true})
         try {
             const res = await api.post("/login",formData)
             set({user : res.data.user,loading:false})
@@ -52,7 +52,7 @@ export const userAuth = create<UserAuth>((set,get)=>({
 
     logout : async() => {
         try {
-            const res = await api.post("/logout")
+             await api.post("/logout")
             set({user : null})
             return true
         } catch (err:any) {
