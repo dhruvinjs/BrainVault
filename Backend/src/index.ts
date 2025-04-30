@@ -15,7 +15,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(cors({ origin: "", credentials: true }));
+app.use(cors({ origin: "https://brain-vault-eight.vercel.app", credentials: true }));
 
 
 mongoose.connect(process.env.MONGO_URL!)
