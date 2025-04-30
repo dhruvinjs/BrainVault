@@ -15,6 +15,7 @@ export function SideBar({ open, setOpen }: SideBarProps) {
  async function handleLogout(){
     const success=await logout()
     if(success) nav('/login')
+      //@ts-ignore
     else setLocalError(error)
   }
 
