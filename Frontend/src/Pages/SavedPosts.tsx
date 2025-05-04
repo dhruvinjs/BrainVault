@@ -20,7 +20,6 @@ export function SavedPosts() {
 
   const searchInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
-  const[localError,setLocalError]=useState<string | null>()
   useEffect(() => {
     const fetchContent = async () => {
       try {
@@ -74,7 +73,6 @@ export function SavedPosts() {
       
     } catch (error:any) {
       console.error("Failed to delete saved content:", error)
-      setLocalError(error)
     }
   }
   return (
@@ -149,6 +147,13 @@ export function SavedPosts() {
             <Loader2 className="w-7 h-7 text-primary animate-spin" />
           </div>
         )}
+
+
+          {error && (
+            <div className="mb-5 bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-md text-sm">
+              <p>{error}</p>
+            </div>
+          )}
 
         {filteredPosts.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
