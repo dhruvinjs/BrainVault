@@ -32,7 +32,7 @@ export function SavedPosts() {
     }
     fetchContent()
   }, [viewSavedPosts])
-
+console.log(savedPosts)
   const handleSearch = () => {
     if (searchInputRef.current) {
       setSearchTerm(searchInputRef.current.value)
@@ -52,10 +52,12 @@ export function SavedPosts() {
     setSearchTerm("")
   }
 
-  const filteredPosts = searchTerm
-    ? savedPosts.filter((post: any) => post.contentId.title.toLowerCase().includes(searchTerm.toLowerCase()))
-    : savedPosts
-
+  const validPosts = savedPosts.filter((post: any) => post?.contentId?.title)
+const filteredPosts = searchTerm
+  ? validPosts.filter((post: any) =>
+      post.contentId.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  : validPosts
   if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900">
@@ -185,7 +187,8 @@ export function SavedPosts() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredPosts.map((post: any) => (
-                <Card
+                
+              <Card
                   key={post._id}
                   _id={post.contentId._id}
                   title={post.contentId.title}
