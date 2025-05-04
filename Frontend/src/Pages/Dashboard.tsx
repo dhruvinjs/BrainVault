@@ -43,8 +43,10 @@ export function Dashboard() {
   }, [viewContent])
 
   const handleAdd = async (data: Omit<Content, "_id">) => {
+    await viewContent() 
     await addContent(data)
     setAddModalOpen(false)
+  
   }
 
   const handleEditClick = (item: Content) => {
@@ -54,6 +56,7 @@ export function Dashboard() {
 
   const handleUpdate = async (data: UpdatedContent) => {
     await updateContent(data)
+    await viewContent() 
     setUpdateModalOpen(false)
     setSelectedContent(null)
   }
@@ -142,11 +145,13 @@ export function Dashboard() {
         )}
 
         {saveSuccess && (
-          <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded-md shadow-md z-50 animate-fadeIn">
-            Content saved!
+          <div className="fixed top-[20%] left-1/2 transform -translate-x-1/2 
+                          bg-green-600 text-white text-lg font-semibold 
+                          px-6 py-3 rounded-lg shadow-2xl z-50 
+                          animate-fadeIn transition-all duration-300 backdrop-blur-sm">
+            ✅ Content saved successfully!
           </div>
         )}
-
         {isInitialLoading ? (
           <div className="flex justify-center items-center h-64">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -160,17 +165,18 @@ export function Dashboard() {
             ) : content && content.length > 0 ? (
               content.map((item) => (
                 <Card
-                  key={item._id}
-                  _id={item._id!}
-                  link={item.link}
-                  title={item.title}
-                  type={item.type}
-                  viewOnly={false}
-                  tags={item.tags || []}
-                  onEdit={() => handleEditClick(item)}
-                  onSave={() => handleSave(item._id!)}
-                  savingState={loading && saveSuccess === item._id}
-                />
+                key={item._id}
+                _id={item._id!}
+                link={item.link}
+                title={item.title}
+                type={item.type}
+                viewOnly={false}
+                tags={item.tags || []}
+                onEdit={() => handleEditClick(item)}
+                onSave={() => handleSave(item._id!)}
+                savingState={loading && saveSuccess === item._id}
+              />
+              
               ))
             ) : (
               <div className="col-span-full flex flex-col justify-center items-center h-64 bg-white dark:bg-gray-800 rounded-lg border p-6 text-center">

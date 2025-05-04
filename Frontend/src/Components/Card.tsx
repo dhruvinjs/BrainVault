@@ -1,7 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { NotebookPen, Pencil, Trash2, Twitter, Youtube, ExternalLink, Star } from "lucide-react"
+import {
+  NotebookPen,
+  Pencil,
+  Trash2,
+  Twitter,
+  Youtube,
+  ExternalLink,
+  Star,
+} from "lucide-react"
 import { contentStore } from "../store/contentStore"
 import { Link } from "react-router-dom"
 import { ConfirmModal } from "./ConfirmModal"
@@ -15,7 +23,8 @@ interface CardProps {
   viewOnly: boolean
   tags: string[]
   onSave?: () => Promise<void>
-  saved?: boolean
+  savedPosts?: boolean
+  onDeleteSaved?: () => Promise<void>
   savingState?: boolean
 }
 
@@ -28,17 +37,23 @@ export function Card({
   viewOnly,
   tags = [],
   onSave,
+  savedPosts,
+  onDeleteSaved,
   savingState = false,
 }: CardProps) {
-  const deleteContent = contentStore((s:any) => s.deleteContent)
-  const isSavedInStore = contentStore((s:any) => s.isSaved(_id))
-  const saveContent = contentStore((s:any) => s.saveContent)
+  const deleteContent = contentStore((s: any) => s.deleteContent)
+  const isSavedInStore = contentStore((s: any) => s.isSaved(_id))
+  const saveContent = contentStore((s: any) => s.saveContent)
 
   const [deleteModal, setDeleteModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
   const isSaved = isSavedInStore
+  const formattedLink =
+    type === "youtube" && !link.includes("embed")
+      ? link.replace("watch?v=", "embed/")
+      : link
 
   const handleDelete = async () => {
     setIsDeleting(true)
@@ -68,8 +83,6 @@ export function Card({
     }
   }
 
-  const formattedLink = type === "youtube" && !link.includes("embed") ? link.replace("watch?v=", "embed/") : link
-
   return (
     <div className="w-[300px] bg-white border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition">
       <div className="flex justify-between items-center p-3 border-b">
@@ -79,8 +92,8 @@ export function Card({
               type === "twitter"
                 ? "bg-blue-50 text-blue-500"
                 : type === "youtube"
-                  ? "bg-red-50 text-red-500"
-                  : "bg-purple-50 text-purple-500"
+                ? "bg-red-50 text-red-500"
+                : "bg-purple-50 text-purple-500"
             }`}
           >
             {type === "twitter" ? (
@@ -91,21 +104,72 @@ export function Card({
               <NotebookPen size={16} />
             )}
           </div>
-          <span className="font-medium text-sm truncate text-black" title={title}>
+          <span
+            className="font-medium text-sm truncate text-black"
+            title={title}
+          >
             {title}
           </span>
         </div>
 
-        {!viewOnly && (
-          <div className="flex items-center gap-2 text-gray-400">
-            <button onClick={onEdit} className="p-1 rounded-full hover:bg-gray-100" aria-label="Edit content">
-              <Pencil size={16} />
-            </button>
+        <div className="flex items-center gap-2 text-gray-400">
+          {!viewOnly && (
+            <>
+              <button
+                onClick={onEdit}
+                className="p-1 rounded-full hover:bg-gray-100"
+                aria-label="Edit content"
+              >
+                <Pencil size={16} />
+              </button>
 
+              <button
+                onClick={() => setDeleteModalOpen(true)}
+                className="p-1 rounded-full hover:bg-gray-100"
+                aria-label="Delete content"
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full" />
+                ) : (
+                  <Trash2 size={16} />
+                )}
+              </button>
+
+              <button
+                onClick={handleSave}
+                disabled={savingState || isSaving}
+                className={`p-1 rounded-full hover:bg-gray-100 ${
+                  isSaved ? "text-yellow-500" : "text-gray-400"
+                }`}
+                aria-label={isSaved ? "Saved" : "Save content"}
+              >
+                {savingState || isSaving ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full" />
+                ) : (
+                  <Star
+                    size={16}
+                    className={isSaved ? "fill-yellow-500 text-amber-300" : ""}
+                  />
+                )}
+              </button>
+            </>
+          )}
+
+          {savedPosts && onDeleteSaved && (
             <button
-              onClick={() => setDeleteModalOpen(true)}
+              onClick={async () => {
+                setIsDeleting(true)
+                try {
+                  await onDeleteSaved()
+                } catch (err) {
+                  console.error("Error deleting saved post:", err)
+                } finally {
+                  setIsDeleting(false)
+                }
+              }}
               className="p-1 rounded-full hover:bg-gray-100"
-              aria-label="Delete content"
+              aria-label="Delete saved content"
               disabled={isDeleting}
             >
               {isDeleting ? (
@@ -114,26 +178,16 @@ export function Card({
                 <Trash2 size={16} />
               )}
             </button>
-
-            <button
-              onClick={handleSave}
-              disabled={savingState || isSaving}
-              className={`p-1 rounded-full hover:bg-gray-100 cursor-pointer ${isSaved ? "text-yellow-500" : "text-gray-400"}`}
-              aria-label={isSaved ? "Saved" : "Save content"}
-            >
-              {savingState || isSaving ? (
-                <div className="animate-spin h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full" />
-              ) : (
-                <Star size={16} className={isSaved ? "fill-yellow-500 text-amber-300" : ""} />
-              )}
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      <ConfirmModal open={deleteModal} setOpen={setDeleteModalOpen} onConfirm={handleDelete} />
+      <ConfirmModal
+        open={deleteModal}
+        setOpen={setDeleteModalOpen}
+        onConfirm={handleDelete}
+      />
 
-      {/* Content Preview */}
       <div className="p-3">
         {type === "youtube" && (
           <div className="aspect-video rounded-md overflow-hidden">
@@ -173,14 +227,16 @@ export function Card({
           </div>
         )}
 
-        {/* Tags */}
         {tags && tags.length > 0 && (
           <div className="mt-3">
             <p className="text-sm text-gray-900">Tags:</p>
             <div className="flex flex-wrap gap-2 mt-1">
               {tags.map((tag, i) => (
-                <span key={i} className="text-xs px-2 py-1 rounded-full bg-gray-900 text-white">
-                  #{tag}
+                <span
+                  key={i}
+                  className="text-xs px-2 py-1 rounded-full bg-gray-900 text-white"
+                >
+                  {tag}
                 </span>
               ))}
             </div>
