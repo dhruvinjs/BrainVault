@@ -40,7 +40,7 @@ export const userAuth = create<UserAuth>((set,_get)=>({
         set({loading:true})
         try {
             const res = await api.post("/login",formData)
-            set({user : res.data.user,loading:false})
+            set({user : res.data.user,loading:false,error:""})
             return true
         } catch (err:any) {
             console.log("error while login",err)
