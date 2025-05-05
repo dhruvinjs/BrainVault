@@ -26,9 +26,9 @@ export interface SavedPost{
 
 export const contentStore = create((set, get:any) => ({
   content: null,        
-  loading: false,       // loading state
-  modalOpen: false,     // modal toggle state
-  error: null,          // error message
+  loading: false,       
+  modalOpen: false,     
+  error: null,          
   savedPosts: [],
   savedPostIds: [], 
 
@@ -60,6 +60,7 @@ export const contentStore = create((set, get:any) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get("/content/view");
+      // console.log(res.data)
       set({ content: res.data.content });
     } catch (err: any) {
       const errMsg =

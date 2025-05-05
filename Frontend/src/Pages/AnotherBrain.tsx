@@ -1,4 +1,3 @@
-"use client"
 
 import { useEffect, useState, useRef } from "react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -15,100 +14,94 @@ export function AnotherBrain() {
   const [error, setError] = useState<string | null>(null)
   const [content, setContent] = useState<Content[]>([])
   const [brainInfo, setBrainInfo] = useState<{ name: string; owner: string } | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const searchRef = useRef<HTMLInputElement>(null)
 
-  const searchTermRef = useRef<HTMLInputElement>(null)
-  const [renderedTerm, setRenderedTerm] = useState("")
+  useEffect(() => {
+    if (brainId) fetchBrainContent()
+  }, [brainId])
 
-  const fetchBrain = async () => {
+  const fetchBrainContent = async () => {
     try {
       setLoading(true)
       setError(null)
+
       const res = await api.get(`/brain/${brainId}`)
       setContent(res.data.brain.content)
+
       setBrainInfo({
         name: "Shared Brain",
         owner: res.data.brain.userId.username || "Unknown User",
       })
-    } catch (error: any) {
-      console.error("Failed to fetch brain:", error)
+    } catch (err: any) {
       setError(
-        error?.response?.data?.message || "Failed to load this brain. It may not exist or you don't have access.",
+        err?.response?.data?.message || "Failed to load this brain. It may not exist or you don't have access."
       )
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    if (brainId) fetchBrain()
-  }, [brainId])
+  const handleSearch = () => {
+    const term = searchRef.current?.value.trim().toLowerCase() || ""
+    setSearchTerm(term)
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleSearch()
   }
 
-  const handleSearch = () => {
-    const term = searchTermRef.current?.value.trim().toLowerCase() || ""
-    setRenderedTerm(term)
-  }
-
   const clearSearch = () => {
-    if (searchTermRef.current) searchTermRef.current.value = ""
-    setRenderedTerm("")
+    setSearchTerm("")
+    if (searchRef.current) searchRef.current.value = ""
   }
 
-  const filteredContent = renderedTerm
-    ? content.filter((post) => post.title.toLowerCase().includes(renderedTerm))
+  const filteredContent = searchTerm
+    ? content.filter((item) => item.title.toLowerCase().includes(searchTerm))
     : content
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
-      {/* Header */}
       <header className="sticky top-0 z-10 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <Button
-              size="sm"
-              onClick={() => navigate("/dashboard")}
-              variant="primary"
-              text="Back to Your Brain"
-              startIcon={<ArrowLeft size={16} />}
-              className="border-gray-700 hover:bg-gray-800 transition-all duration-300"
-            />
+        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <Button
+            size="sm"
+            onClick={() => navigate("/dashboard")}
+            variant="primary"
+            text="Back to Your Brain"
+            startIcon={<ArrowLeft size={16} />}
+          />
 
-            {!loading && !error && content.length > 0 && (
-              <div className="relative w-full sm:w-64">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"
-                  size={16}
-                  onClick={handleSearch}
-                />
-                <input
-                  ref={searchTermRef}
-                  type="text"
-                  placeholder="Search saved content by title..."
-                  onKeyDown={handleKeyDown}
-                  className="w-full pl-10 pr-10 py-2 border rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/50 text-black"
-                />
-              </div>
-            )}
-          </div>
+          {!loading && !error && content.length > 0 && (
+            <div className="relative w-full sm:w-64">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"
+                size={16}
+                onClick={handleSearch}
+              />
+              <input
+                ref={searchRef}
+                type="text"
+                placeholder="Search content..."
+                onKeyDown={handleKeyDown}
+                className="w-full pl-10 pr-10 py-2 border rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-400 text-black"
+              />
+            </div>
+          )}
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Brain Info */}
+      <main className="max-w-7xl mx-auto px-4 py-8">
         {!loading && !error && brainInfo && (
-          <div className="mb-8 text-center">
+          <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center p-3 bg-purple-600/20 rounded-full mb-4">
               <Brain size={32} className="text-purple-400" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">{brainInfo.name}</h1>
+            <h1 className="text-3xl font-bold mb-2">{brainInfo.name}</h1>
             <p className="text-gray-400">Shared by {brainInfo.owner}</p>
           </div>
         )}
 
-        {/* Loading */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 size={40} className="text-purple-500 animate-spin mb-4" />
@@ -116,7 +109,6 @@ export function AnotherBrain() {
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
             <div className="bg-red-500/20 p-4 rounded-full mb-4">
@@ -134,17 +126,19 @@ export function AnotherBrain() {
           </div>
         )}
 
-        {/* Content */}
         {!loading && !error && (
           <>
             {content.length > 0 && (
               <div className="mb-6 flex justify-between items-center">
                 <p className="text-gray-400">
-                  {filteredContent.length} {filteredContent.length === 1 ? "item" : "items"} found
-                  {renderedTerm && ` matching "${renderedTerm}"`}
+                  {filteredContent.length} {filteredContent.length === 1 ? "item" : "items"}
+                  {searchTerm && ` matching "${searchTerm}"`}
                 </p>
-                {renderedTerm && (
-                  <button onClick={clearSearch} className="text-sm text-purple-400 hover:text-purple-300">
+                {searchTerm && (
+                  <button
+                    onClick={clearSearch}
+                    className="text-sm text-purple-400 hover:text-purple-300"
+                  >
                     Clear search
                   </button>
                 )}
@@ -154,31 +148,27 @@ export function AnotherBrain() {
             {filteredContent.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredContent.map((item) => (
-                  <div key={item._id} className="flex justify-center">
-                    <Card
-                      _id={item._id!}
-                      link={item.link}
-                      title={item.title}
-                      type={item.type}
-                      tags={item.tags || []}
-                      viewOnly={true}
-                    />
-                  </div>
+                  <Card
+                    key={item._id}
+                    _id={item._id!}
+                    link={item.link}
+                    title={item.title}
+                    type={item.type}
+                    tags={item.tags || []}
+                    viewOnly={true}
+                  />
                 ))}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                {renderedTerm ? (
+                {searchTerm ? (
                   <>
                     <div className="bg-gray-800 p-4 rounded-full mb-4">
                       <Search size={32} className="text-gray-500" />
                     </div>
                     <h2 className="text-xl font-semibold mb-2">No matching content</h2>
-                    <p className="text-gray-400 max-w-md mb-4">No items match your search for "{renderedTerm}".</p>
-                    <button
-                      onClick={clearSearch}
-                      className="text-purple-400 hover:text-purple-300 font-medium"
-                    >
+                    <p className="text-gray-400 max-w-md mb-4">No items match "{searchTerm}".</p>
+                    <button onClick={clearSearch} className="text-purple-400 hover:text-purple-300 font-medium">
                       Clear search
                     </button>
                   </>

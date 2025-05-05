@@ -1,6 +1,3 @@
-"use client"
-
-import type React from "react"
 import { useEffect, useState, useRef } from "react"
 import { ArrowLeft, Loader2, Bookmark, Search } from "lucide-react"
 import { useNavigate } from "react-router-dom"
@@ -20,6 +17,7 @@ export function SavedPosts() {
 
   const searchInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
+
   useEffect(() => {
     const fetchContent = async () => {
       try {
@@ -32,32 +30,23 @@ export function SavedPosts() {
     }
     fetchContent()
   }, [viewSavedPosts])
-console.log(savedPosts)
-  const handleSearch = () => {
-    if (searchInputRef.current) {
-      setSearchTerm(searchInputRef.current.value)
-    }
-  }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch()
-    }
+  const handleSearch = () => {
+    setSearchTerm(searchInputRef.current?.value || "")
   }
 
   const clearSearch = () => {
-    if (searchInputRef.current) {
-      searchInputRef.current.value = ""
-    }
+    searchInputRef.current!.value = ""
     setSearchTerm("")
   }
 
   const validPosts = savedPosts.filter((post: any) => post?.contentId?.title)
-const filteredPosts = searchTerm
-  ? validPosts.filter((post: any) =>
-      post.contentId.title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  : validPosts
+  const filteredPosts = searchTerm
+    ? validPosts.filter((post: any) =>
+        post.contentId.title.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : validPosts
+
   if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900">
@@ -72,68 +61,64 @@ const filteredPosts = searchTerm
   const handleDelete = async (id: string) => {
     try {
       await deleteSaveContents(id)
-      
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Failed to delete saved content:", error)
     }
   }
+
   return (
     <div className="bg-gray-900 min-h-screen">
-      {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Button
-              size="sm"
-              onClick={() => navigate("/dashboard")}
-              variant="secondary"
-              text="Back"
-              startIcon={<ArrowLeft size={16} />}
-            />
-            <h1 className="text-lg font-bold flex items-center gap-1.5 text-gray-900">
-              <Bookmark className="text-primary" size={18} />
-              Saved Content
-            </h1>
-          </div>
+      <header className="bg-white border-b flex justify-between items-center p-3">
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            onClick={() => navigate("/dashboard")}
+            variant="secondary"
+            text="Back"
+            startIcon={<ArrowLeft size={16} />}
+          />
+          <h1 className="text-lg font-bold flex items-center gap-1.5 text-gray-900">
+            <Bookmark className="text-primary" size={18} />
+            Saved Content
+          </h1>
+        </div>
 
-          {/* Search Input */}
-          <div className="relative w-full sm:w-64">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              size={14}
-              onClick={handleSearch}
-            />
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search by title..."
-              defaultValue={searchTerm}
-              onKeyDown={handleKeyDown}
-              className="w-full pl-9 pr-8 py-1.5 text-sm border rounded-md bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary/50"
-            />
-            {searchTerm && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                aria-label="Clear search"
+        <div className="relative w-full sm:w-64">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={14}
+            onClick={handleSearch}
+          />
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Search by title..."
+            defaultValue={searchTerm}
+            onChange={handleSearch}
+            className="w-full pl-9 pr-8 py-1.5 text-sm border rounded-md bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary/50"
+          />
+          {searchTerm && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              aria-label="Clear search"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            )}
-          </div>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
         </div>
       </header>
 
@@ -149,13 +134,6 @@ const filteredPosts = searchTerm
             <Loader2 className="w-7 h-7 text-primary animate-spin" />
           </div>
         )}
-
-
-          {error && (
-            <div className="mb-5 bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-md text-sm">
-              <p>{error}</p>
-            </div>
-          )}
 
         {filteredPosts.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -187,8 +165,7 @@ const filteredPosts = searchTerm
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredPosts.map((post: any) => (
-                
-              <Card
+                <Card
                   key={post._id}
                   _id={post.contentId._id}
                   title={post.contentId.title}
@@ -197,7 +174,7 @@ const filteredPosts = searchTerm
                   viewOnly={true}
                   tags={post.contentId.tags}
                   savedPosts={true}
-                  onDeleteSaved={()=>handleDelete(post.contentId._id)}
+                  onDeleteSaved={() => handleDelete(post.contentId._id)}
                 />
               ))}
             </div>
