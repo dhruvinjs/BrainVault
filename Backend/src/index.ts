@@ -15,7 +15,8 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(cors({ origin: "https://brain-vault-eight.vercel.app", credentials: true }));
+app.use(cors({ origin: ["https://brain-vault-eight.vercel.app","http://localhost:5173"], 
+  credentials: true }));
 
 
 mongoose.connect(process.env.MONGO_URL!)
@@ -25,7 +26,7 @@ mongoose.connect(process.env.MONGO_URL!)
 app.listen(3000, () => console.log("Listening on PORT 3000"));
 
 // User Signup
-app.post('/api/v1/signup', async (req: Request, res: Response): Promise<any> => {
+app.post('/api/v1/register', async (req: Request, res: Response): Promise<any> => {
   try {
     const userSchema = z.object({
       username: z.string().min(3, 'Username should be at least 3 characters'),
@@ -106,8 +107,9 @@ app.get('/api/v1/user/checkAuth', authMiddleware, async (req: Request, res: Resp
   try {
     //@ts-ignore
     if (req.user) {
-      //@ts-ignore
+      //@ts-ignore      
       res.status(200).json({ message: "user is authorized", user: req.user });
+      return
     }
   } catch (error) {
     console.log("error while checkauth", error);
@@ -166,16 +168,18 @@ app.patch('/api/v1/content/update/:id', authMiddleware, async (req: Request, res
   try {
     const contentId = req.params.id;
     const { title, link, tags } = req.body;
+    //@ts-ignore
+    const userId = req.user._id;
 
-    const updatedContent = await ContentModel.findById(contentId);
-    if (!updatedContent) return res.status(404).json({ message: "Content not found" });
+    const contentToUpdate = await ContentModel.findOne({ _id: contentId, userId: userId });
+    if (!contentToUpdate) return res.status(404).json({ message: "Content not found or you do not have permission to update it." });
 
-    updatedContent.title = title || updatedContent.title;
-    updatedContent.link = link || updatedContent.link;
-    updatedContent.tags = tags || updatedContent.tags;
-    await updatedContent.save();
+    contentToUpdate.title = title || contentToUpdate.title;
+    contentToUpdate.link = link || contentToUpdate.link;
+    contentToUpdate.tags = tags || contentToUpdate.tags;
+    await contentToUpdate.save();
 
-    res.status(200).json({ success: true, message: "Content updated", updatedContent });
+    res.status(200).json({ success: true, message: "Content updated", updatedContent: contentToUpdate });
   } catch (error) {
     res.status(500).json({ error: error });
   }
@@ -185,10 +189,15 @@ app.patch('/api/v1/content/update/:id', authMiddleware, async (req: Request, res
 app.delete('/api/v1/content/delete/:id', authMiddleware, async (req: Request, res: Response): Promise<any> => {
   try {
     const contentId = req.params.id;
-    const content = await ContentModel.findById(contentId);
-    if (!content) return res.status(403).json({ message: "Content not found" });
+    //@ts-ignore
+    const userId = req.user._id;
 
-    await ContentModel.deleteOne({ _id: content._id });
+    const result = await ContentModel.deleteOne({ _id: contentId, userId: userId });
+
+    if (result.deletedCount === 0) {
+        return res.status(404).json({ message: "Content not found or you do not have permission to delete it." });
+    }
+
     res.status(200).json({ success: true, message: "Content deleted" });
   } catch (error) {
     res.status(500).json({ error: error });

@@ -1,241 +1,290 @@
-import { Brain, Twitter, Youtube, FileText, Search, Layers, Zap } from "lucide-react"
-import { Button } from "../Components"
-import { Link, useNavigate } from "react-router-dom"
+import { motion, useInView } from 'framer-motion';
+import { useRef} from 'react';
+import { Brain, Search, Folder, Trash2, Link2, FileText, Video, Twitter } from 'lucide-react';
+import { Footer } from '../Components';
 
 export function Landing() {
-  const nav = useNavigate()
+  
 
-  const scrollToHowItWorks = () => {
-    document
-      .getElementById("how-it-works")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" })
-  }
+  const featuresRef = useRef(null);
+  const demoRef = useRef(null);
+  const inspirationRef = useRef(null);
+
+  
+
+  const featuresInView = useInView(featuresRef, { once: true, margin: "-100px" });
+  const demoInView = useInView(demoRef, { once: true, margin: "-100px" });
+  const inspirationInView = useInView(inspirationRef, { once: true, margin: "-100px" });
+
+  const features = [
+    {
+      icon: Link2,
+      title: "Save Anything",
+      description: "Capture tweets, YouTube videos, articles, and personal notes in one secure place."
+    },
+    {
+      icon: Search,
+      title: "Search Easily",
+      description: "Find what you need instantly with powerful search and smart tagging."
+    },
+    {
+      icon: Folder,
+      title: "Switch Brains",
+      description: "Organize content into multiple vaults for different projects or topics."
+    },
+    {
+      icon: Trash2,
+      title: "Safe Deletion",
+      description: "Archive or permanently delete with confidence. Your data, your control."
+    }
+  ];
+
+  const demoItems = [
+    {
+      type: "twitter",
+      icon: Twitter,
+      title: "Thread on productivity hacks",
+      tags: ["productivity", "tips"],
+      color: "bg-sky-50 border-sky-200 dark:bg-sky-900/30 dark:border-sky-700"
+    },
+    {
+      type: "video",
+      icon: Video,
+      title: "Building a Second Brain - Tiago Forte",
+      tags: ["learning", "PKM"],
+      color: "bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-700"
+    },
+    {
+      type: "article",
+      icon: FileText,
+      title: "The Science of Memory Retention",
+      tags: ["science", "memory"],
+      color: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-700"
+    }
+  ];
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white">
-      <div className="w-full max-w-7xl px-4">
-        {/* Header */}
-        <header className="sticky top-0 z-40 border-b border-gray-700 bg-gray-900 backdrop-blur">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Brain className="h-6 w-6 text-white" />
-              <span className="text-xl font-bold text-white">BrainVault</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-6">
-              {["Features", "How It Works"].map((label) => (
-                <a
-                  key={label}
-                  href={`#${label.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="text-sm font-medium hover:text-white/80"
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 transition-colors duration-300">
+      {/* Theme Toggle */}
+     
+
+      {/* Hero Section */}
+      <section className="relative overflow-hidden pt-20 pb-32 px-6">
+        <div className="max-w-6xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-6"
+          >
+            <h1 className="text-7xl font-bold mb-4 bg-gradient-to-r from-slate-800 via-blue-800 to-slate-700 dark:from-slate-200 dark:via-blue-300 dark:to-slate-100 bg-clip-text text-transparent">
+              🧠 BrainVault
+            </h1>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-4xl font-semibold mb-6 text-slate-700 dark:text-slate-200"
+          >
+            Save Smarter. Remember Better.
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-xl text-slate-600 dark:text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed"
+          >
+            Your digital memory vault for capturing and organizing everything that matters.
+            Save tweets, videos, articles, and notes — all in one beautifully organized space.
+          </motion.p>
+
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
+            whileTap={{ scale: 0.98 }}
+            className="bg-slate-800 dark:bg-blue-600 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-slate-900 dark:hover:bg-blue-700 transition-colors duration-300"
+          >
+            Get Started
+          </motion.button>
+
+          {/* Floating Elements */}
+          <motion.div
+            animate={{
+              y: [0, -20, 0],
+              rotate: [0, 5, 0]
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute top-20 left-10 opacity-20"
+          >
+            <Brain size={80} className="text-blue-600 dark:text-blue-400" />
+          </motion.div>
+
+          <motion.div
+            animate={{
+              y: [0, 20, 0],
+              rotate: [0, -5, 0]
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute bottom-20 right-10 opacity-20"
+          >
+            <FileText size={60} className="text-slate-600 dark:text-slate-400" />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section ref={featuresRef} className="py-24 px-6 bg-white/50 dark:bg-slate-900/50">
+        <div className="max-w-6xl mx-auto">
+          <motion.h3
+            initial={{ opacity: 0, y: 20 }}
+            animate={featuresInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-4xl font-bold text-center mb-16 text-slate-800 dark:text-slate-100"
+          >
+            Everything you need to build your knowledge
+          </motion.h3>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                animate={featuresInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{
+                  scale: 1.05,
+                  rotate: 1,
+                  transition: { duration: 0.2 }
+                }}
+                className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 border border-slate-100 dark:border-slate-700"
+              >
+                <motion.div
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.5 }}
+                  className="inline-block mb-4"
                 >
-                  {label}
-                </a>
-              ))}
-            </nav>
-            <div className="flex items-center gap-4">
-              <Button
-                variant="dark"
-                size="sm"
-                text="Log in"
-                onClick={() => nav("/login")}
-                className="hidden md:flex"
-              />
-              <Button
-                variant="dark"
-                size="sm"
-                text="Get Started"
-                onClick={() => nav("/register")}
-                className="transition-colors duration-200 ease-in-out hover:bg-amber-950 transform hover:scale-105"
-              />
-            </div>
+                  <feature.icon size={40} className="text-blue-600 dark:text-blue-400" />
+                </motion.div>
+                <h4 className="text-xl font-semibold mb-3 text-slate-800 dark:text-slate-100">{feature.title}</h4>
+                <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
           </div>
-        </header>
+        </div>
+      </section>
 
-        <main className="flex-1 space-y-20 py-20">
-          {/* Hero Section */}
-          <section className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-            {/* Left column */}
-            <div className="flex flex-col justify-center space-y-6">
-              <h1 className="text-5xl font-bold text-gray-800 dark:text-white">
-                Your Second Brain for All Knowledge
-              </h1>
-              <p className="max-w-[600px] text-gray-600 dark:text-gray-300 text-lg">
-                Capture, organize, and retrieve everything from Twitter threads to YouTube videos
-                and personal notes in one unified knowledge hub.
-              </p>
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <Button
-                  variant="dark"
-                  size="md"
-                  text="Get Started"
-                  onClick={() => nav("/register")}
-                  className="px-4 py-2 rounded transition hover:bg-amber-950 hover:scale-105"
-                />
-                <Button
-                  variant="dark"
-                  size="md"
-                  text="See How It Works"
-                  onClick={scrollToHowItWorks}
-                  className="px-4 py-2 rounded transition hover:bg-amber-950 hover:scale-105"
-                />
-              </div>
-            </div>
+      {/* Demo Section */}
+      <section ref={demoRef} className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <motion.h3
+            initial={{ opacity: 0, y: 20 }}
+            animate={demoInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-4xl font-bold text-center mb-16 text-slate-800 dark:text-slate-100"
+          >
+            Your content, beautifully organized
+          </motion.h3>
 
-            {/* Right column */}
-            <div className="flex items-center justify-center">
-              <div className="relative h-[350px] w-full md:h-[420px] lg:h-[450px]">
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="relative h-[300px] w-[300px] md:h-[380px] md:w-[380px] rounded-2xl border border-gray-700 p-1 bg-black/50 backdrop-blur">
-                    <div className="flex h-full w-full flex-col items-center justify-center rounded-2xl bg-black/80 p-6">
-                      <Brain className="h-16 w-16 text-white mb-4" />
-                      <h3 className="text-xl font-bold text-white">Your Knowledge Hub</h3>
-                      <p className="text-sm text-gray-400">Everything connected in one place</p>
-                      <div className="mt-6 flex gap-4">
-                        {[Twitter, Youtube, FileText].map((Icon, i) => (
-                          <div
-                            key={i}
-                            className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800"
-                          >
-                            <Icon className="h-6 w-6 text-white" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={demoInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="grid md:grid-cols-3 gap-6"
+          >
+            {demoItems.map((item, index) => (
+              <motion.div
+                key={index}
+                whileHover={{
+                  y: -10,
+                  transition: { duration: 0.2 }
+                }}
+                className={`${item.color} border-2 rounded-xl p-6 cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300`}
+              >
+                <div className="flex items-start gap-4 mb-4">
+                  <motion.div
+                    whileHover={{ scale: 1.2, rotate: 5 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <item.icon size={28} className="text-slate-700 dark:text-slate-200" />
+                  </motion.div>
+                  <h4 className="text-lg font-semibold text-slate-800 dark:text-slate-100 leading-tight flex-1">
+                    {item.title}
+                  </h4>
                 </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Features */}
-          <section id="features" className="space-y-12">
-            <div className="text-center">
-              <h2 className="text-4xl font-bold text-gray-800 dark:text-white">
-                All Your Knowledge in One Place
-              </h2>
-              <p className="mx-auto mt-4 max-w-[700px] text-gray-600 dark:text-gray-300 text-lg">
-                Seamlessly integrate content from multiple sources and access it whenever you need it.
-              </p>
-            </div>
-            <div className="grid gap-8 md:grid-cols-3">
-              {[
-                {
-                  icon: Twitter,
-                  title: "Twitter Integration",
-                  desc: "Save and organize valuable Twitter threads and tweets.",
-                },
-                {
-                  icon: Youtube,
-                  title: "YouTube Knowledge",
-                  desc: "Store video content with timestamps, transcripts, and notes.",
-                },
-                {
-                  icon: FileText,
-                  title: "Personal Notes",
-                  desc: "Capture your thoughts in a structured format.",
-                },
-              ].map(({ icon: Icon, title, desc }, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center space-y-4 rounded-lg border border-gray-700 bg-black p-6"
-                >
-                  <Icon className="h-8 w-8 text-white" />
-                  <h3 className="text-xl font-bold text-white">{title}</h3>
-                  <p className="text-center text-gray-400">{desc}</p>
+                <div className="flex gap-2 flex-wrap">
+                  {item.tags.map((tag, tagIndex) => (
+                    <span
+                      key={tagIndex}
+                      className="px-3 py-1 bg-white/60 dark:bg-slate-800/60 rounded-full text-sm text-slate-700 dark:text-slate-300 font-medium"
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </section>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
 
-          {/* How it works */}
-          <section id="how-it-works" className="space-y-12">
-            <div className="text-center">
-              <h2 className="text-4xl font-bold text-gray-800 dark:text-white">
-                How BrainVault Works
-              </h2>
-              <p className="mx-auto mt-4 max-w-[700px] text-gray-600 dark:text-gray-300 text-lg">
-                Three simple steps to organize your digital knowledge
-              </p>
-            </div>
-            <div className="grid gap-8 md:grid-cols-3">
-              {[
-                {
-                  step: "1",
-                  icon: Zap,
-                  title: "Capture",
-                  desc: "Save content from Twitter, YouTube, or create notes easily.",
-                },
-                {
-                  step: "2",
-                  icon: Layers,
-                  title: "Organize",
-                  desc: "Auto-tag your content or use custom systems.",
-                },
-                {
-                  step: "3",
-                  icon: Search,
-                  title: "Retrieve",
-                  desc: "Use search to find what you need.",
-                },
-              ].map(({ step, icon: Icon, title, desc }, i) => (
-                <div
-                  key={i}
-                  className="relative flex flex-col items-center space-y-4 p-6 rounded-lg border border-gray-700 bg-black"
-                >
-                  <div className="absolute -left-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 text-white">
-                    <span className="font-bold">{step}</span>
-                  </div>
-                  <Icon className="h-8 w-8 text-white" />
-                  <h3 className="text-xl font-bold text-white">{title}</h3>
-                  <p className="text-center text-gray-400">{desc}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+      {/* Inspiration Section */}
+      <section ref={inspirationRef} className="py-24 px-6 bg-white/50 dark:bg-slate-900/50">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.h3
+            initial={{ opacity: 0, y: 20 }}
+            animate={inspirationInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-4xl font-bold mb-8 text-slate-800 dark:text-slate-100"
+          >
+            Why a Second Brain?
+          </motion.h3>
 
-          {/* CTA */}
-          <section className="text-center">
-            <h2 className="text-4xl font-bold text-gray-800 dark:text-white">
-              Ready to Build Your Second Brain?
-            </h2>
-            <p className="mx-auto mt-4 max-w-[700px] text-gray-600 dark:text-gray-300 text-lg">
-              Start organizing your digital knowledge today and never lose valuable information again.
-            </p>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Button
-                variant="dark"
-                size="lg"
-                text="Get Started"
-                onClick={() => nav("/register")}
-                className="px-4 py-2 rounded transition hover:bg-amber-950 hover:scale-105"
-              />
-            </div>
-          </section>
-        </main>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={inspirationInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-lg text-slate-600 dark:text-slate-300 mb-10 leading-relaxed"
+          >
+            In the age of information overload, our minds aren't designed to remember everything.
+            BrainVault acts as your external memory system — freeing your mind to focus on creativity
+            and deep thinking while securely storing everything you want to remember. Build connections,
+            discover insights, and never lose a valuable idea again.
+          </motion.p>
 
-        {/* Footer */}
-        <footer className="border-t border-gray-700 py-6 text-center">
-          <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
-            <div className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-white" />
-              <p className="text-sm text-gray-400">
-                © {new Date().getFullYear()} BrainVault. All rights reserved.
-              </p>
-            </div>
-            <div className="flex gap-4">
-              {["Privacy", "Terms", "Contact"].map((item) => (
-                <Link
-                  key={item}
-                  to="#"
-                  className="text-sm text-gray-400 hover:text-white"
-                >
-                  {item}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </footer>
-      </div>
+          <motion.a
+            href="https://www.youtube.com/watch?v=OP3dA2GcAh8"
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ opacity: 0, y: 20 }}
+            animate={inspirationInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+            className="inline-flex items-center gap-3 bg-red-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-red-700 transition-colors duration-300"
+          >
+            <Video size={24} />
+            Why I Use a Second Brain
+          </motion.a>
+        </div>
+      </section>
+
+      {/* Footer */}
+    <Footer/>
     </div>
-  )
+  );
 }
+
+
