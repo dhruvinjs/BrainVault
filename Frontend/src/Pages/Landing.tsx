@@ -2,6 +2,7 @@ import { motion, useInView } from 'framer-motion';
 import { useRef} from 'react';
 import { Brain, Search, Folder, Trash2, Link2, FileText, Video, Twitter } from 'lucide-react';
 import { Footer } from '../Components';
+import { useNavigate } from 'react-router-dom';
 
 export function Landing() {
   
@@ -38,7 +39,7 @@ export function Landing() {
       description: "Archive or permanently delete with confidence. Your data, your control."
     }
   ];
-
+  const nav=useNavigate()
   const demoItems = [
     {
       type: "twitter",
@@ -102,6 +103,7 @@ export function Landing() {
           </motion.p>
 
           <motion.button
+          onClick={()=>nav('/register')}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
