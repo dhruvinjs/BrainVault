@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { useRef, useState } from 'react';
-import { User, Lock, ArrowLeft, X, Mail, Chrome, Eye, EyeOff } from 'lucide-react';
+import { useRef } from 'react';
+import { User, Lock, ArrowLeft, X, Mail, Chrome } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useRegisterMutation } from '../store/useAuthStore';
@@ -9,16 +9,17 @@ import { toast } from 'react-hot-toast';
 const userSchema = z.object({
   username: z.string().min(3, 'Username should be at least 3 characters'),
   email: z.string().email('Invalid email'),
-  password: z.string()
+  password: z
+    .string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Must contain an uppercase letter')
-    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Must contain a special character')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Must contain a special character'),
 });
 
 const passwordRequirements = [
-  { label: 'At least 8 characters', test: (pwd: string) => pwd.length >= 8 },
-  { label: 'Contains uppercase letter', test: (pwd: string) => /[A-Z]/.test(pwd) },
-  { label: 'Contains special character', test: (pwd: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd) }
+  { id: 'length', label: 'At least 8 characters', test: (pwd: string) => pwd.length >= 8 },
+  { id: 'uppercase', label: 'Contains uppercase letter', test: (pwd: string) => /[A-Z]/.test(pwd) },
+  { id: 'special', label: 'Contains special character', test: (pwd: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd) },
 ];
 
 export function Register() {
@@ -27,30 +28,52 @@ export function Register() {
   const passwordRef = useRef<HTMLInputElement>(null);
   const confirmPasswordRef = useRef<HTMLInputElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
-  const navigate = useNavigate();
+  const { mutateAsync: registerUser } = useRegisterMutation();
+  const navigate=useNavigate()
+  const updatePasswordRequirements = () => {
+    const password = passwordRef.current?.value || '';
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    passwordRequirements.forEach((req) => {
+      const icon = document.getElementById(`req-icon-${req.id}`);
+      const label = document.getElementById(`req-label-${req.id}`);
+      const isValid = req.test(password);
 
-  const { mutateAsync: registerUser, isPending } = useRegisterMutation();
+      if (icon && label) {
+        if (password.length === 0) {
+          icon.innerHTML = '<div class="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-600"></div>';
+          label.className = 'text-slate-500 dark:text-slate-400';
+        } else if (isValid) {
+          icon.innerHTML = `<svg class="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+          label.className = 'text-green-600 dark:text-green-400 font-medium';
+        } else {
+          icon.innerHTML = `<svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+          label.className = 'text-red-600 dark:text-red-400';
+        }
+      }
+    });
+  };
 
   const showError = (field: string, message: string) => {
     const errorElement = document.getElementById(`error-${field}`);
     if (errorElement) {
-      errorElement.textContent = message;
+      const textSpan = errorElement.querySelector('span');
+      if (textSpan) textSpan.textContent = message;
       errorElement.classList.remove('hidden');
+      errorElement.classList.add('flex');
     }
   };
 
   const clearErrors = () => {
     const errorElements = document.querySelectorAll('[id^="error-"]');
-    errorElements.forEach(el => {
-      el.textContent = '';
+    errorElements.forEach((el) => {
+      const textSpan = el.querySelector('span');
+      if (textSpan) textSpan.textContent = '';
       el.classList.add('hidden');
+      el.classList.remove('flex');
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
 
@@ -66,15 +89,18 @@ export function Register() {
       return;
     }
 
-    const result = userSchema.safeParse(formData);
-    if (!result.success) {
-      result.error.errors.forEach((err) => {
-        if (err.path[0]) {
-          showError(err.path[0] as string, err.message);
-        }
-      });
-      return;
+ const result = userSchema.safeParse(formData);
+if (!result.success) {
+  const zodError = result.error; // TypeScript now knows this is a ZodError
+  zodError.issues.forEach((err) => {
+    if (err.path[0]) {
+      showError(err.path[0] as string, err.message);
     }
+  });
+  return;
+}
+
+
 
     try {
       if (submitButtonRef.current) submitButtonRef.current.disabled = true;
@@ -95,13 +121,9 @@ export function Register() {
     }
   };
 
+
   const handleGoogleRegister = () => {
-    if (submitButtonRef.current) {
-      submitButtonRef.current.disabled = true;
-      setTimeout(() => {
-        if (submitButtonRef.current) submitButtonRef.current.disabled = false;
-      }, 1000);
-    }
+    console.log('Google registration triggered');
   };
 
   return (
@@ -127,7 +149,6 @@ export function Register() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Username
@@ -137,16 +158,16 @@ export function Register() {
                 <input
                   ref={usernameRef}
                   name="username"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100 transition-colors"
                   placeholder="johndoe"
                 />
               </div>
-              <p id="error-username" className="hidden text-red-500 text-sm mt-1 flex items-center gap-1">
+              <p id="error-username" className="hidden text-red-500 text-sm mt-1 items-center gap-1">
                 <X size={14} />
+                <span></span>
               </p>
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Email
@@ -157,16 +178,16 @@ export function Register() {
                   ref={emailRef}
                   name="email"
                   type="email"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100 transition-colors"
                   placeholder="you@example.com"
                 />
               </div>
-              <p id="error-email" className="hidden text-red-500 text-sm mt-1 flex items-center gap-1">
+              <p id="error-email" className="hidden text-red-500 text-sm mt-1 items-center gap-1">
                 <X size={14} />
+                <span></span>
               </p>
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Password
@@ -176,67 +197,32 @@ export function Register() {
                 <input
                   ref={passwordRef}
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  onInput={(e) => {
-                    const value = (e.target as HTMLInputElement).value;
-                    passwordRequirements.forEach((req, index) => {
-                      const icon = document.getElementById(`req-icon-${index}`);
-                      const label = document.getElementById(`req-label-${index}`);
-                      const passed = req.test(value);
-                      if (icon && label) {
-                        icon.innerHTML = passed
-                          ? `<svg xmlns="http://www.w3.org/2000/svg" class="text-green-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
-                          : `<svg xmlns="http://www.w3.org/2000/svg" class="text-slate-400 dark:text-slate-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`;
-                        label.className = passed
-                          ? 'text-green-600 dark:text-green-400 transition-colors'
-                          : 'text-slate-500 dark:text-slate-400 transition-colors';
-                      }
-                    });
-                  }}
-                  className="w-full pl-10 pr-10 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white transition-colors"
+                  type="password"
+                  onInput={updatePasswordRequirements}
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100 transition-colors"
                   placeholder="••••••••"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
               </div>
 
               <div className="mt-3 space-y-2">
-                {passwordRequirements.map((req, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm">
-                    <div id={`req-icon-${index}`} className="flex items-center justify-center w-4 h-4 flex-shrink-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="text-slate-400 dark:text-slate-500"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                      </svg>
+                {passwordRequirements.map((req) => (
+                  <div key={req.id} className="flex items-center gap-2 text-sm">
+                    <div id={`req-icon-${req.id}`} className="flex-shrink-0">
+                      <div className="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-600"></div>
                     </div>
-                    <span id={`req-label-${index}`} className="text-slate-500 dark:text-slate-400 transition-colors">
+                    <span id={`req-label-${req.id}`} className="text-slate-500 dark:text-slate-400">
                       {req.label}
                     </span>
                   </div>
                 ))}
               </div>
 
-              <p id="error-password" className="hidden text-red-500 text-sm mt-2 flex items-center gap-1">
+              <p id="error-password" className="hidden text-red-500 text-sm mt-2 items-center gap-1">
                 <X size={14} />
+                <span></span>
               </p>
             </div>
 
-            {/* Confirm Password */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Confirm Password
@@ -246,33 +232,25 @@ export function Register() {
                 <input
                   ref={confirmPasswordRef}
                   name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  className="w-full pl-10 pr-10 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white transition-colors"
+                  type="password"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100 transition-colors"
                   placeholder="••••••••"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
               </div>
-              <p id="error-confirmPassword" className="hidden text-red-500 text-sm mt-1 flex items-center gap-1">
+              <p id="error-confirmPassword" className="hidden text-red-500 text-sm mt-1 items-center gap-1">
                 <X size={14} />
+                <span></span>
               </p>
             </div>
 
-            {/* Submit */}
             <motion.button
               ref={submitButtonRef}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={isPending}
               className="w-full bg-slate-800 dark:bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-slate-900 dark:hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isPending ? 'Creating Account...' : 'Create Account'}
+              Create Account
             </motion.button>
           </form>
 
