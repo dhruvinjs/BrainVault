@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/axios';
 import { AxiosError } from 'axios';
+import { Content } from '../hooks/useContentQueries';
 
 // 1. Type Definitions
 interface User {
@@ -135,5 +136,25 @@ export const useGoogleLoginMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['checkAuth'] });
     }
+  });
+};
+
+const fetchUserProfile = async (): Promise<{ user: User; content: Content[] }> => {
+  const { data } = await api.get('/user/profile');
+  return {
+    user: data.user,
+    content: data.content ?? [],
+  };
+};
+
+
+
+// Profile Query Hook
+export const useProfileQuery = () => {
+  return useQuery<{ user: User; content: Content[] }, AxiosError<ApiError>>({
+    queryKey: ['profile'],
+    queryFn: fetchUserProfile,
+    refetchOnWindowFocus: false,
+    retry: false,
   });
 };

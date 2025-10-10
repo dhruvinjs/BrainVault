@@ -1,3 +1,4 @@
+
 import express, { NextFunction, Request, Response } from "express";
 import dotenv from 'dotenv';
 dotenv.config({ path: './.env' });
@@ -15,8 +16,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(cors({ origin: ["https://brain-vault-eight.vercel.app","http://localhost:5173"], 
-  credentials: true }));
+app.use(cors({ origin: ["https://brain-vault-eight.vercel.app","http://localhost:5173"], credentials: true }));
 
 
 mongoose.connect(process.env.MONGO_URL!)
@@ -25,8 +25,29 @@ mongoose.connect(process.env.MONGO_URL!)
 
 app.listen(3000, () => console.log("Listening on PORT 3000"));
 
+const processContentLink = (link: string, type: string): string => {
+  if (type === 'youtube') {
+    // Regex to capture the video ID from all common YouTube URL formats
+    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = link.match(youtubeRegex);
+    // If a valid video ID is found, create a clean embed link
+    if (match && match[1]) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+    // If no match is found, return the original link as a fallback
+    return link;
+  }
+  if (type === 'twitter') {
+    // Make the replacement for x.com more specific
+    return link.replace('//x.com', '//twitter.com');
+  }
+  // For all other types ('article', 'note', etc.), return the original link
+  return link;
+};
+
+
 // User Signup
-app.post('/api/v1/register', async (req: Request, res: Response): Promise<any> => {
+app.post('/api/v1/signup', async (req: Request, res: Response): Promise<any> => {
   try {
     const userSchema = z.object({
       username: z.string().min(3, 'Username should be at least 3 characters'),
@@ -49,7 +70,7 @@ app.post('/api/v1/register', async (req: Request, res: Response): Promise<any> =
 
     const hashedPass = await bcrypt.hash(password, 12);
     const newUser = await User.create({ username, password: hashedPass });
-    const newBrain = await Brain.create({ userId: newUser._id });
+    await Brain.create({ userId: newUser._id });
 
     res.status(200).json({ message: "New user created" });
   } catch (error) {
@@ -97,7 +118,12 @@ app.patch('/api/v1/profile/edit', authMiddleware, async (req: Request, res: Resp
     if (password) user.password = await bcrypt.hash(password, 12);
 
     await user.save();
-    res.status(200).json({ success: true});
+    
+    // Return the updated user object
+    res.status(200).json({ 
+      success: true, 
+      user: { _id: user._id, username: user.username } 
+    });
   } catch (error) {
     res.status(500).json({ error: error });
   }
@@ -107,9 +133,8 @@ app.get('/api/v1/user/checkAuth', authMiddleware, async (req: Request, res: Resp
   try {
     //@ts-ignore
     if (req.user) {
-      //@ts-ignore      
+      //@ts-ignore
       res.status(200).json({ message: "user is authorized", user: req.user });
-      return
     }
   } catch (error) {
     console.log("error while checkauth", error);
@@ -117,19 +142,25 @@ app.get('/api/v1/user/checkAuth', authMiddleware, async (req: Request, res: Resp
   }
 });
 
+/**
+ * 2. Patched "Add Content" Endpoint
+ */
 app.post('/api/v1/content/add', authMiddleware, async (req: Request, res: Response): Promise<any> => {
   try {
     const { title, link, type, tags } = req.body;
-    if (!title || !link) return res.status(400).json({ message: "Required parameters missing" });
+    if (!title) {
+        return res.status(400).json({ message: "Title parameter is required" });
+    }
+    // A link is not required for a 'note'
+    if (!link && type !== 'note') {
+        return res.status(400).json({ message: "Link parameter is required for this content type" });
+    }
 
     //@ts-ignore
     const userId = req.user._id;
-    let finalLink = "";
-    if (type === "youtube") {
-      finalLink = link.replace("watch?v=", "embed/");
-    } else if (type === "twitter") {
-      finalLink = link.replace('x', 'twitter');
-    }
+    
+    // Use the new robust link processing function
+    const finalLink = processContentLink(link, type);
 
     const newContent = await ContentModel.create({
       title,
@@ -139,13 +170,13 @@ app.post('/api/v1/content/add', authMiddleware, async (req: Request, res: Respon
       userId,
     });
 
-    const brain = await Brain.findOneAndUpdate(
+    await Brain.findOneAndUpdate(
       { userId },
       { $push: { content: newContent._id } },
       { new: true }
     );
 
-    res.status(200).json({ success: true, message: "Content added", newContent, brain });
+    res.status(200).json({ success: true, message: "Content added", newContent });
   } catch (error) {
     res.status(500).json({ error });
     console.log(error);
@@ -163,7 +194,7 @@ app.get('/api/v1/content/view', authMiddleware, async (req: Request, res: Respon
   }
 });
 
-// Update Content
+
 app.patch('/api/v1/content/update/:id', authMiddleware, async (req: Request, res: Response): Promise<any> => {
   try {
     const contentId = req.params.id;
@@ -174,9 +205,14 @@ app.patch('/api/v1/content/update/:id', authMiddleware, async (req: Request, res
     const contentToUpdate = await ContentModel.findOne({ _id: contentId, userId: userId });
     if (!contentToUpdate) return res.status(404).json({ message: "Content not found or you do not have permission to update it." });
 
-    contentToUpdate.title = title || contentToUpdate.title;
-    contentToUpdate.link = link || contentToUpdate.link;
-    contentToUpdate.tags = tags || contentToUpdate.tags;
+    if (title) contentToUpdate.title = title;
+    if (tags) contentToUpdate.tags = tags;
+    
+    // Also process the link on update, using the content's original type
+    if (link) {
+        contentToUpdate.link = processContentLink(link, contentToUpdate.type);
+    }
+
     await contentToUpdate.save();
 
     res.status(200).json({ success: true, message: "Content updated", updatedContent: contentToUpdate });
@@ -258,15 +294,17 @@ app.delete('/api/v1/saved-posts/:contentId', authMiddleware, async (req: Request
 });
 
 // Share Brain
-app.patch('/api/v1/brain/share', authMiddleware, async (req: Request, res: Response): Promise<any> => {
+app.patch('/api/v1/brain/share', authMiddleware, async (req: Request, res: Response):Promise<any> => {
   try {
     const { share } = req.body;
     //@ts-ignore
     const userId = req.user._id;
 
     const brain = await Brain.findOne({ userId }).populate("content").select("-userId");
-    if (!brain) return res.status(404).json({ error: "Brain not found" });
-
+    if (!brain) {
+      res.status(404).json({ error: "Brain not found" });
+      return 
+}
     if (share === false) {
       await Link.deleteOne({ userId });
       brain.share = false;
@@ -283,26 +321,55 @@ app.patch('/api/v1/brain/share', authMiddleware, async (req: Request, res: Respo
     await Link.create({ hash, userId });
 
     res.status(200).json({ success: true, link: hash });
+    return
   } catch (error) {
     res.status(500).json({ error: error });
   }
 });
 
 // View Shared Brain
-app.get('/api/v1/brain/:shareLink', async (req: Request, res: Response): Promise<any> => {
+app.get('/api/v1/brain/:shareLink', async (req: Request, res: Response):Promise<any> => {
   try {
+    // Validate the shareLink param
     const shareLinkSchema = z.object({ shareLink: z.string().min(3) });
     const result = shareLinkSchema.safeParse(req.params);
-    if (!result.success) return res.status(400).json({ error: result.error });
+    if (!result.success) return res.status(400).json({ error: result.error.format() });
 
     const { shareLink } = result.data;
-    const linkRecord = await Link.findOne({ hash: shareLink });
 
+    // Find the link record
+    const linkRecord = await Link.findOne({ hash: shareLink });
     if (!linkRecord) return res.status(404).json({ message: "Link not found" });
 
-    const brain = await Brain.findOne({ userId: linkRecord.userId }).populate("content");
+    // Find brain and populate content
+    const brain = await Brain.findOne({ userId: linkRecord.userId }).populate('content');
+    if (!brain) return res.status(404).json({ message: "Brain not found" });
+
     res.status(200).json({ success: true, brain });
   } catch (error) {
-    res.status(500).json({ error: error });
+    console.error("Error fetching shared brain:", error);
+    res.status(500).json({ error });
+  }
+});
+
+
+// Get User Profile with Content
+app.get('/api/v1/user/profile', authMiddleware, async (req: Request, res: Response):Promise<any> => {
+  try {
+    //@ts-ignore
+    const userId = req.user._id;
+
+    // Fetch user data
+    const user = await User.findById(userId).select('-password'); // exclude password
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Fetch user's content
+    const content = await ContentModel.find({ userId }).populate('userId', 'username');
+
+    res.status(200).json({ success: true, user, content });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ error });
   }
 });

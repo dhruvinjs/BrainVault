@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useRef } from 'react';
-import { User, Lock, ArrowLeft, X, Mail, Chrome } from 'lucide-react';
+import { User, Lock, ArrowLeft, X, Mail } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useRegisterMutation } from '../store/useAuthStore';
@@ -122,9 +122,9 @@ if (!result.success) {
   };
 
 
-  const handleGoogleRegister = () => {
-    console.log('Google registration triggered');
-  };
+  // const handleGoogleRegister = () => {
+  //   console.log('Google registration triggered');
+  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 px-6 py-12">
@@ -265,16 +265,6 @@ if (!result.success) {
             </div>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleGoogleRegister}
-            type="button"
-            className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 py-3 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Chrome size={20} />
-            Sign up with Google
-          </motion.button>
 
           <p className="text-center mt-6 text-slate-600 dark:text-slate-400">
             Already have an account?{' '}

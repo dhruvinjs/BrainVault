@@ -1,248 +1,285 @@
-"use client"
-
-import { useState, useEffect, useRef } from "react"
-import { userAuth } from "../store/userAuth"
-import { contentStore, type Content } from "../store/contentStore"
-import { Button } from "../Components/Button"
-import { Loader2, Save, X, CheckCircle, ArrowLeft, User, Twitter, Youtube, FileText, Shield } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { motion, useInView } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { User, Shield, FileText, ArrowLeft, Edit3, CheckCircle, X, Save, Loader2 } from "lucide-react";
+import { Button } from "../Components/Button";
+import { useProfileQuery } from "../store/useAuthStore";
+import { api } from "../api/axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function Profile() {
-  const { user, loading, error, checkAuth, editProfile } = userAuth()
-  const [isEditing, setEditing] = useState(false)
-  const [usernameUpdated, setUsernameUpdated] = useState(false)
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const profileRef = useRef(null);
+  const inView = useInView(profileRef, { once: true, margin: "-100px" });
 
-  const usernameRef = useRef<HTMLInputElement>(null)
-  const passwordRef = useRef<HTMLInputElement>(null)
-  const navigate = useNavigate()
+  // Use the profile query hook
+  const { data, isLoading, isError, error } = useProfileQuery();
 
-  const viewContent = contentStore((s: any) => s.viewContent)
-  const content: Content[] = contentStore((s: any) => s.content) ?? []
+  const [isEditing, setEditing] = useState(false);
+  const [updated, setUpdated] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const usernameRef = useRef<HTMLInputElement>(null);
 
+  // Handle authentication errors
   useEffect(() => {
-    checkAuth()
-    viewContent()
-  }, [checkAuth, viewContent])
-
-  const handleSave = async () => {
-    const newUsername = usernameRef.current?.value.trim() ?? user!.username
-    const newPassword = passwordRef.current?.value ?? ""
-
-    const payload: any = { username: newUsername }
-    if (newPassword) payload.password = newPassword
-
-    if (await editProfile(payload)) {
-      setUsernameUpdated(true)
-      setTimeout(() => setUsernameUpdated(false), 2000) // reset after 2 seconds
-      setEditing(false)
-      if (passwordRef.current) passwordRef.current.value = ""
+    if (isError) {
+      console.log("Profile error:", error);
+      navigate("/login");
     }
+  }, [isError, error, navigate]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900">
+        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+      </div>
+    );
   }
 
-  const totalCount = content.length
-  const twitterCount = content.filter((c) => c.type === "twitter").length
-  const youtubeCount = content.filter((c) => c.type === "youtube").length
- 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-slate-200 flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <Loader2 className="w-10 h-10 text-purple-600 animate-spin mb-4" />
-          <p className="text-gray-700 text-lg">Loading your profile...</p>
-        </div>
-      </div>
-    )
+  // If no data after loading, redirect
+  if (!data || !data.user) {
+    navigate("/login");
+    return null;
   }
+
+  const user = data.user;
+  const content = data.content || [];
+
+  const total = content.length;
+  const twitterCount = content.filter((c) => c.type === "twitter").length;
+  const youtubeCount = content.filter((c) => c.type === "youtube").length;
+  const articleCount = content.filter((c) => c.type === "article").length;
+  const noteCount = content.filter((c) => c.type === "note").length;
+
+  // Save username
+  const handleSave = async () => {
+    const newUsername = usernameRef.current?.value?.trim();
+    
+    if (!newUsername || newUsername === user.username) {
+      setEditing(false);
+      return;
+    }
+    
+    try {
+      setIsSaving(true);
+      await api.patch('/profile/edit', { username: newUsername });
+      
+      // Invalidate and refetch profile query
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await queryClient.invalidateQueries({ queryKey: ['checkAuth'] });
+      
+      setUpdated(true);
+      setTimeout(() => setUpdated(false), 3000);
+      setEditing(false);
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      alert(error?.response?.data?.message || "Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header with back button */}
-        <div className="mb-6 flex items-center">
+    <div
+      ref={profileRef}
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 py-16 px-6 transition-colors duration-300"
+    >
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="flex items-center gap-4 mb-12"
+        >
           <Button
             size="sm"
+            text="Back"
+            startIcon={<ArrowLeft size={16} />}
             onClick={() => navigate("/dashboard")}
             variant="dark"
-            text="Back to Dashboard"
-            startIcon={<ArrowLeft size={16} />}
-            className="hover:bg-white/80 transition-colors"
           />
-          <h1 className="text-2xl font-bold ml-4 text-gray-800">Your Profile</h1>
-        </div>
+          <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-100">
+            Your Profile
+          </h1>
+        </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Profile Card */}
-          <div className="md:col-span-2 bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 text-white flex justify-between items-center">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <User size={20} />
-                Account Information
+        {/* Grid Layout */}
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Left: Profile Info */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="md:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg p-8"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <User size={22} /> Account Info
               </h2>
               {!isEditing && (
                 <Button
-                  variant="primary"
+                  text="Edit"
                   size="sm"
-                  text="Edit Profile"
+                  variant="primary"
+                  startIcon={<Edit3 size={16} />}
                   onClick={() => setEditing(true)}
-                  className="bg-white/10 border-white/20 hover:bg-white/20 text-white transition duration-300"
                 />
               )}
             </div>
 
-            <div className="p-6">
-              {/* Username header - simplified without avatar */}
-              <div className="mb-8">
-                <h3 className="text-2xl font-bold text-gray-800">{user.username}</h3>
-                <div className="flex items-center gap-1 text-sm text-gray-600 mt-2">
+            {!isEditing ? (
+              <div>
+                <p className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                  {user.username}
+                </p>
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <Shield size={14} className="text-green-500" />
                   <span>Verified Account</span>
                 </div>
+                {updated && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="mt-4 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg flex items-center gap-2"
+                  >
+                    <CheckCircle size={18} />
+                    <span>Profile updated successfully!</span>
+                  </motion.div>
+                )}
               </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-4"
+              >
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                  Username
+                </label>
+                <input
+                  ref={usernameRef}
+                  defaultValue={user.username}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                  disabled={isSaving}
+                />
 
-              {/* Form or Display */}
-              {isEditing ? (
-                <>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                      <input
-                        placeholder=""
-                        ref={usernameRef}
-                        defaultValue={user.username}
-                        type="text"
-                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${
-                          usernameUpdated ? "border-green-500 ring-green-500/50" : ""
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                      <input
-                        ref={passwordRef}
-                        placeholder="(leave blank to keep current)"
-                        type="password"
-                        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Password must be at least 8 characters and include a number and special character.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 justify-end mt-6">
-                    <Button
-                      variant="secondary"
-                      size="md"
-                      text="Cancel"
-                      onClick={() => setEditing(false)}
-                      startIcon={<X size={16} />}
-                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                    />
-                    <Button
-                      variant="primary"
-                      size="md"
-                      text={loading ? "Saving..." : "Save Changes"}
-                      onClick={handleSave}
-                      disabled={loading}
-                      startIcon={loading ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="bg-gray-300 p-4 rounded-lg">
-                      <p className="text-sm text-gray-700 mb-1">Username</p>
-                      <p className="font-medium">{user.username}</p>
-                    </div>
-                    </div>
-
-                  {usernameUpdated && (
-                    <div className="bg-green-50 text-green-700 px-4 py-3 rounded-md flex items-center gap-2 animate-fadeIn">
-                      <CheckCircle size={16} />
-                      <span>Profile updated successfully!</span>
-                    </div>
-                  )}
+                <div className="flex gap-3 justify-end mt-4">
+                  <Button
+                    text="Cancel"
+                    variant="secondary"
+                    size="md"
+                    startIcon={<X size={16} />}
+                    onClick={() => {
+                      setEditing(false);
+                      if (usernameRef.current) {
+                        usernameRef.current.value = user.username;
+                      }
+                    }}
+                    disabled={isSaving}
+                  />
+                  <Button
+                    text={isSaving ? "Saving..." : "Save"}
+                    variant="primary"
+                    size="md"
+                    startIcon={isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                    onClick={handleSave}
+                    disabled={isSaving}
+                  />
                 </div>
-              )}
+              </motion.div>
+            )}
+          </motion.div>
 
-              {error && (
-                <div className="bg-red-50 text-red-600 px-4 py-3 rounded-md mt-4 animate-fadeIn">
-                  <p>{error}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Account Info Sidebar */}
-          <div className="space-y-4">
-            <div className="bg-white p-5 rounded-xl shadow-md">
-              <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
-                <User size={18} className="text-purple-500" />
-                Account Status
-              </h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Status</span>
-                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">Active</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Last Login</span>
-                  <span className="font-medium">Today</span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-600">Account Type</span>
-                  <span className="font-medium">Standard</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-5 rounded-xl shadow-md">
-              <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
-                <FileText size={18} className="text-purple-500" />
-                Content Summary
+          {/* Right: Stats + Content */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7 }}
+            className="space-y-6"
+          >
+            {/* Stats Card */}
+            <div className="bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold mb-4 text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <FileText size={18} className="text-blue-500" /> Content Summary
               </h3>
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                    <FileText size={18} className="text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{totalCount} Total Items</p>
-                    <p className="text-sm text-gray-500">All content</p>
-                  </div>
+                <div className="flex justify-between text-slate-700 dark:text-slate-300">
+                  <span>Total Items</span>
+                  <span className="font-medium text-blue-600 dark:text-blue-400">{total}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Twitter size={18} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{twitterCount} Twitter Threads</p>
-                    <p className="text-sm text-gray-500">
-                      {Math.round((twitterCount / totalCount) * 100) || 0}% of content
-                    </p>
-                  </div>
+                <div className="flex justify-between text-slate-700 dark:text-slate-300">
+                  <span>Twitter</span>
+                  <span className="font-medium">{twitterCount}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                    <Youtube size={18} className="text-red-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{youtubeCount} YouTube Videos</p>
-                    <p className="text-sm text-gray-500">
-                      {Math.round((youtubeCount / totalCount) * 100) || 0}% of content
-                    </p>
-                  </div>
+                <div className="flex justify-between text-slate-700 dark:text-slate-300">
+                  <span>YouTube</span>
+                  <span className="font-medium">{youtubeCount}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div>
-                  </div>
+                <div className="flex justify-between text-slate-700 dark:text-slate-300">
+                  <span>Articles</span>
+                  <span className="font-medium">{articleCount}</span>
+                </div>
+                <div className="flex justify-between text-slate-700 dark:text-slate-300">
+                  <span>Notes</span>
+                  <span className="font-medium">{noteCount}</span>
                 </div>
               </div>
             </div>
-          </div>
+
+            {/* Recent Content Card */}
+            <div className="bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold mb-4 text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <FileText size={18} className="text-blue-500" /> Recent Content
+              </h3>
+              <div className="space-y-3 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                {content.slice(0, 10).map((c) => (
+                  <motion.div
+                    key={c._id}
+                    whileHover={{ scale: 1.02 }}
+                    className="flex justify-between items-center border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 hover:bg-white dark:hover:bg-slate-900 transition"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-slate-800 dark:text-slate-100 truncate">
+                        {c.title}
+                      </p>
+                      <p className="text-xs text-gray-500 capitalize">{c.type}</p>
+                    </div>
+                    {c.link && (
+                      <a
+                        href={c.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 text-sm hover:underline ml-2 flex-shrink-0"
+                      >
+                        View
+                      </a>
+                    )}
+                  </motion.div>
+                ))}
+                {content.length === 0 && (
+                  <div className="text-center py-8">
+                    <FileText size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                    <p className="text-center text-gray-500 text-sm">
+                      You haven't added any content yet.
+                    </p>
+                    <button
+                      onClick={() => navigate("/dashboard")}
+                      className="mt-3 text-blue-600 dark:text-blue-400 text-sm hover:underline"
+                    >
+                      Add your first content
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
-  )
+  );
 }

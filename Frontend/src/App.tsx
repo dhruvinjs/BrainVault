@@ -1,43 +1,37 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AnotherBrain, Dashboard, Landing, Profile, SavedPosts, Login, Register } from "./Pages";
-import { AuthInitializer } from "./Components/AuthInitializer";
-import { Header } from "./Components/Header";
 
-const queryClient = new QueryClient();
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  DashBoard,
+  AnotherBrain,
+  Landing,
+  Profile,
 
-const ProtectedLayout = () => {
-  return (
-    <>
-      <AuthInitializer />
-      {/* The Outlet will render the specific protected page (e.g., Dashboard) */}
-      <Outlet />
-    </>
-  );
-};
-
+  Login,
+  Register
+} from "./Pages";
+import { AuthStateSyncer } from "./Components/AuthStateSyncer";
+import { PublicLayout } from "./Components/PublicLayout.tsx";
+import { ProtectedLayout } from "./Components/ProtectedLayout";
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Header /> 
+    <BrowserRouter>
+      <AuthStateSyncer />
 
-        <Routes>
-          <Route path="/" element={<Landing />} />
+      <Routes>
+        <Route path="/" element={<Landing />} />
+
+        <Route element={<PublicLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+        </Route>
 
-          {/* --- Protected Routes --- */}
-          {/* All routes wrapped by ProtectedLayout will run the AuthInitializer. */}
-          <Route element={<ProtectedLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/anotherBrain/:brainId" element={<AnotherBrain />} />
-            <Route path="/saved-posts" element={<SavedPosts />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </QueryClientProvider>
+        <Route element={<ProtectedLayout />}>
+          <Route path="/dashboard" element={<DashBoard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/anotherBrain/:brainId" element={<AnotherBrain />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 

@@ -1,6 +1,7 @@
+
 import { motion } from 'framer-motion';
-import { useRef, useState } from 'react';
-import { Mail, Lock, ArrowLeft, Chrome, Eye, EyeOff } from 'lucide-react';
+import { useRef } from 'react';
+import { Mail, Lock, ArrowLeft, Chrome } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLoginMutation, useGoogleLoginMutation } from '../store/useAuthStore';
 import { AxiosError } from 'axios';
@@ -9,7 +10,8 @@ export function Login() {
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
-  const [showPassword, setShowPassword] = useState(false); // <-- new state
+  // REMOVED: The useNavigate hook is no longer needed here.
+  // Navigation is now handled globally by AuthInitializer.
 
   const { 
     mutate: login, 
@@ -29,10 +31,13 @@ export function Login() {
 
     if (!username || !password) return;
 
+    // CORRECTED: We only call the login mutation.
+    // The onSuccess callback is removed to prevent race conditions.
     login({ username, password });
   };
 
   const handleGoogleLogin = () => {
+    // Same here: just call the mutation and let AuthInitializer handle the redirect.
     googleLogin();
   };
 
@@ -102,19 +107,11 @@ export function Login() {
                 />
                 <input
                   ref={passwordRef}
-                  type={showPassword ? 'text' : 'password'} // <-- toggle
-                  className="w-full pl-10 pr-10 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100 transition-colors"
+                  type="password"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100 transition-colors"
                   placeholder="••••••••"
                   required
                 />
-                {/* Toggle icon */}
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
               </div>
             </div>
 
@@ -148,7 +145,7 @@ export function Login() {
 
           <motion.button
             whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: 1.0 }}
             onClick={handleGoogleLogin}
             disabled={isLoading}
             className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 py-3 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
