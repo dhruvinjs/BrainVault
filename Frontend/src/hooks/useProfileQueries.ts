@@ -1,87 +1,66 @@
-// import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-// import { api as apiClient } from "../api/axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "../api/axios";
+import { AxiosError } from "axios";
+import {  Content } from "./useContentQueries"; // Assuming types can be imported from here or a central types file
+import {User} from './useAuthQueries'
+export interface ProfileData {
+  user: User;
+  content: Content[];
+}
 
-// // ----------------------
-// // 🔹 TYPE DEFINITIONS
-// // ----------------------
-// export interface UserRef {
-//   _id: string;
-//   username: string;
-//   email?: string;
-// }
+interface ProfileUpdates {
+  username: string;
+}
 
-// export interface Content {
-//   _id: string;
-//   title: string;
-//   link: string;
-//   type: "twitter" | "youtube" | "article" | "note";
-//   tags: string[];
-//   content?: string;
-//   is_starred?: boolean;
-// }
+interface ApiError {
+  message: string;
+}
 
-// export interface ProfileData {
-//   user: UserRef;
-//   content: Content[];
-// }
+// ----------------------
+// 🔹 API FUNCTIONS
+// ----------------------
+const fetchProfile = async (): Promise<ProfileData> => {
+  const { data } = await api.get("/user/profile");
+  return {
+    user: data.user,
+    content: data.content ?? [],
+  };
+};
 
-// // ----------------------
-// // 🔹 API FUNCTIONS
-// // ----------------------
-// const fetchProfile = async (): Promise<ProfileData> => {
-//   const { data } = await apiClient.get("/api/v1/user/checkAuth");
-//   if (!data.user || !Array.isArray(data.user.content)) {
-//     throw new Error("Failed to fetch profile data");
-//   }
+const updateProfile = async (updates: ProfileUpdates): Promise<{ message: string }> => {
+  const { data } = await api.patch("/profile/edit", updates);
+  return data;
+};
 
-//   return {
-//     user: data.user,
-//     content: data.user.content,
-//   };
-// };
+// ----------------------
+// 🔹 REACT QUERY HOOKS
+// ----------------------
+export const useProfileQueries = () => {
+  const queryClient = useQueryClient();
+  const queryKey = ["profile"];
 
-// const updateProfile = async (updates: { username?: string; password?: string }) => {
-//   const { data } = await apiClient.patch("/api/v1/profile/edit", updates);
-//   return data; // backend returns { success: true }
-// };
+  // --- GET PROFILE ---
+  const useGetProfile = () =>
+    useQuery<ProfileData, AxiosError<ApiError>>({
+      queryKey,
+      queryFn: fetchProfile,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    });
 
-// // ----------------------
-// // 🔹 REACT QUERY HOOKS
-// // ----------------------
-// export const useProfileQueries = () => {
-//   const queryClient = useQueryClient();
-//   const queryKey = ["profile"];
+  // --- UPDATE PROFILE ---
+  const useUpdateProfile = () =>
+    useMutation<{ message: string }, AxiosError<ApiError>, ProfileUpdates>({
+      mutationFn: updateProfile,
+      onSuccess: () => {
+        // Invalidate both profile and auth check to ensure UI consistency
+        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: ["checkAuth"] });
+      },
+    });
 
-//   // --- GET PROFILE ---
-//   const useGetProfile = () =>
-//     useQuery<ProfileData>({
-//       queryKey,
-//       queryFn: fetchProfile,
-//       refetchOnWindowFocus: false,
-//       retry: 1,
-//     });
-
-//   // --- UPDATE PROFILE ---
-//   const useUpdateProfile = () =>
-//     useMutation({
-//       mutationFn: updateProfile,
-//       onSuccess: (_, updates) => {
-//         queryClient.setQueryData<ProfileData>(queryKey, (old) => {
-//           if (!old) return old;
-//           return {
-//             ...old,
-//             user: {
-//               ...old.user,
-//               ...updates,
-//             },
-//           };
-//         });
-//         queryClient.invalidateQueries(queryKey);
-//       },
-//     });
-
-//   return {
-//     useGetProfile,
-//     useUpdateProfile,
-//   };
-// };
+  return {
+    useGetProfile,
+    useUpdateProfile,
+  };
+};

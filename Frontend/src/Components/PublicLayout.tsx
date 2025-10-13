@@ -1,6 +1,6 @@
 
 import { Navigate, Outlet } from "react-router-dom";
-import { useCheckAuthQuery } from "../store/useAuthStore";
+import { useCheckAuthQuery } from "../hooks/useAuthQueries";
 
 /**
  * PublicLayout: A gatekeeper for public-only pages.

@@ -109,7 +109,7 @@ export function Landing() {
             transition={{ duration: 0.6, delay: 0.6 }}
             whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
             whileTap={{ scale: 0.98 }}
-            className="bg-slate-800 dark:bg-blue-600 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-slate-900 dark:hover:bg-blue-700 transition-colors duration-300"
+            className="bg-slate-800 cursor-pointer dark:bg-blue-600 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-slate-950 dark:hover:bg-blue-900 transition-colors duration-300"
           >
             Get Started
           </motion.button>

@@ -46,7 +46,7 @@ const fetchContents = async (): Promise<Omit<Content, "is_starred">[]> => {
   const { data } = await apiClient.get("/content/view");
 
   // Example: { success: true, content: [...] }
-  console.log("Fetched contents:", data);
+  // console.log("Fetched contents:", data);
 
   if (data && Array.isArray(data.content)) {
     return data.content;

@@ -47,7 +47,7 @@ const processContentLink = (link: string, type: string): string => {
 
 
 // User Signup
-app.post('/api/v1/signup', async (req: Request, res: Response): Promise<any> => {
+app.post('/api/v1/register', async (req: Request, res: Response): Promise<any> => {
   try {
     const userSchema = z.object({
       username: z.string().min(3, 'Username should be at least 3 characters'),

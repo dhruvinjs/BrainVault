@@ -3,8 +3,9 @@ import { useRef } from 'react';
 import { User, Lock, ArrowLeft, X, Mail } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import { useRegisterMutation } from '../store/useAuthStore';
+import { useRegisterMutation } from '../hooks/useAuthQueries';
 import { toast } from 'react-hot-toast';
+import { GoogleButton } from '../Components';
 
 const userSchema = z.object({
   username: z.string().min(3, 'Username should be at least 3 characters'),
@@ -105,13 +106,13 @@ if (!result.success) {
     try {
       if (submitButtonRef.current) submitButtonRef.current.disabled = true;
 
-      const response = await registerUser({
+      await registerUser({
         username: formData.username,
         email: formData.email,
         password: formData.password,
       });
 
-      toast.success(response.message || 'Account created successfully!');
+      toast.success('Account created successfully!');
       setTimeout(() => navigate('/login'), 1500);
     } catch (error: any) {
       const msg = error?.response?.data?.message || 'Registration failed';
@@ -122,9 +123,9 @@ if (!result.success) {
   };
 
 
-  // const handleGoogleRegister = () => {
-  //   console.log('Google registration triggered');
-  // };
+  const handleGoogleRegister = () => {
+    console.log('Google registration triggered');
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 px-6 py-12">
@@ -259,19 +260,18 @@ if (!result.success) {
               <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                Or continue with
-              </span>
+              <span className="px-4 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400">Or continue with</span>
             </div>
           </div>
 
+          {/* Google Button */}
+          <div className="flex justify-center">
+            <GoogleButton onClick={handleGoogleRegister} />
+          </div>
 
           <p className="text-center mt-6 text-slate-600 dark:text-slate-400">
             Already have an account?{' '}
-            <Link
-              to="/login"
-              className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
-            >
+            <Link to="/login" className="text-blue-600 dark:text-blue-400 hover:underline font-semibold">
               Sign in
             </Link>
           </p>

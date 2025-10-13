@@ -1,17 +1,17 @@
 
 import { motion } from 'framer-motion';
 import { useRef } from 'react';
-import { Mail, Lock, ArrowLeft, Chrome } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useLoginMutation, useGoogleLoginMutation } from '../store/useAuthStore';
+import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom'; // Re-import useNavigate
+import { useLoginMutation, useGoogleLoginMutation } from '../hooks/useAuthQueries';
 import { AxiosError } from 'axios';
+import { toast } from 'react-hot-toast'; // Import toast
+import { GoogleButton } from '../Components';
 
 export function Login() {
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-
-  // REMOVED: The useNavigate hook is no longer needed here.
-  // Navigation is now handled globally by AuthInitializer.
+  const navigate = useNavigate(); // Re-add the navigate hook
 
   const { 
     mutate: login, 
@@ -31,14 +31,23 @@ export function Login() {
 
     if (!username || !password) return;
 
-    // CORRECTED: We only call the login mutation.
-    // The onSuccess callback is removed to prevent race conditions.
-    login({ username, password });
+    // DEFINITIVE FIX: Add the onSuccess callback to handle the redirect.
+    login({ username, password }, {
+      onSuccess: () => {
+        toast.success("Login successful!");
+        navigate('/dashboard', { replace: true });
+      }
+    });
   };
 
   const handleGoogleLogin = () => {
-    // Same here: just call the mutation and let AuthInitializer handle the redirect.
-    googleLogin();
+    // Also apply the fix to Google Login for consistency.
+    googleLogin(undefined, {
+        onSuccess: () => {
+            toast.success('Login successful!');
+            navigate('/dashboard', { replace: true });
+        }
+    });
   };
 
   const isLoading = isLoggingIn || isGoogleLoggingIn;
@@ -50,6 +59,9 @@ export function Login() {
     return 'Invalid username or password';
   };
 
+  
+
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 transition-colors duration-300 flex items-center justify-center px-6 py-12">
       <motion.div
@@ -143,16 +155,10 @@ export function Login() {
             </div>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 1.0 }}
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-            className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 py-3 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Chrome size={20} />
-            {isGoogleLoggingIn ? 'Redirecting...' : 'Sign in with Google'}
-          </motion.button>
+         <div className="flex justify-center">
+            <GoogleButton onClick={handleGoogleLogin} />
+          </div>
+
 
           <p className="text-center mt-6 text-slate-600 dark:text-slate-400">
             Don't have an account?{' '}
