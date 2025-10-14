@@ -14,8 +14,6 @@ import { any, z } from "zod";
 import { OAuth2Client } from "google-auth-library";
 const app = express();
 const GOOGLE_CLIENT_ID=process.env.GOOGLE_CLIENT_ID
-const GOOGLE_SECRET=process.env.GOOGLE_SECRET
-const REDIRECT_URI=`${process.env.BACKEND_URI}/api/v1/auth/google/callback`
 const client=new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 app.use(express.json());
 app.use(cookieParser());
@@ -87,6 +85,8 @@ app.post('/api/v1/auth/google',async (req:Request,res:Response) => {
         password: null,
       });
     }
+     await Brain.create({ userId: user._id });
+   
        const jwtToken = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET!, { expiresIn: "24h" });
    
       
@@ -478,7 +478,14 @@ app.get('/api/v1/brain/:shareLink', async (req: Request, res: Response):Promise<
     const brain = await Brain.findOne({ userId: linkRecord.userId }).populate('content');
     if (!brain) return res.status(404).json({ message: "Brain not found" });
 
-    res.status(200).json({ success: true, brain });
+    const user=await User.findById(linkRecord.userId).populate('username')
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return 
+    }
+
+
+    res.status(200).json({ success: true, brain,username:user });
   } catch (error) {
     console.error("Error fetching shared brain:", error);
     res.status(500).json({ error });

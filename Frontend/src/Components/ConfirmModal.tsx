@@ -6,9 +6,21 @@ interface ConfirmModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   onConfirm: () => void;
+  title?: string;
+  message?: string;
+  confirmText?: string;
+  variant?: "danger" | "primary";
 }
 
-export function ConfirmModal({ open, setOpen, onConfirm }: ConfirmModalProps) {
+export function ConfirmModal({
+  open,
+  setOpen,
+  onConfirm,
+  title = "Confirm Action",
+  message = "Are you sure you want to proceed?",
+  confirmText = "Confirm",
+  variant = "primary",
+}: ConfirmModalProps) {
   return (
     <AnimatePresence>
       {open && (
@@ -18,7 +30,6 @@ export function ConfirmModal({ open, setOpen, onConfirm }: ConfirmModalProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          {/* Modal Box */}
           <motion.div
             className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-[320px] sm:w-[360px] p-6 border border-slate-200 dark:border-slate-700"
             initial={{ scale: 0.8, opacity: 0, y: 40 }}
@@ -41,7 +52,7 @@ export function ConfirmModal({ open, setOpen, onConfirm }: ConfirmModalProps) {
               transition={{ delay: 0.1 }}
               className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-3 text-center"
             >
-              Confirm Delete
+              {title}
             </motion.h2>
 
             <motion.p
@@ -50,7 +61,7 @@ export function ConfirmModal({ open, setOpen, onConfirm }: ConfirmModalProps) {
               transition={{ delay: 0.15 }}
               className="text-slate-600 dark:text-slate-300 mb-8 text-center leading-relaxed"
             >
-              Are you sure you want to delete this content? This action cannot be undone.
+              {message}
             </motion.p>
 
             {/* Buttons */}
@@ -66,9 +77,9 @@ export function ConfirmModal({ open, setOpen, onConfirm }: ConfirmModalProps) {
 
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
-                  variant="danger"
+                  variant={variant}
                   size="sm"
-                  text="Delete"
+                  text={confirmText}
                   onClick={() => {
                     onConfirm();
                     setOpen(false);
