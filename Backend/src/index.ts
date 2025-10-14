@@ -11,10 +11,16 @@ import { Brain, ContentModel, Link, SavedPosts, User } from "./db";
 import { authMiddleware } from "./middleware";
 import cookieParser from "cookie-parser";
 import { any, z } from "zod";
-
+import { OAuth2Client } from "google-auth-library";
 const app = express();
+const GOOGLE_CLIENT_ID=process.env.GOOGLE_CLIENT_ID
+const GOOGLE_SECRET=process.env.GOOGLE_SECRET
+const REDIRECT_URI=`${process.env.BACKEND_URI}/api/v1/auth/google/callback`
+const client=new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 app.use(express.json());
 app.use(cookieParser());
+
+
 
 app.use(cors({ origin: ["https://brain-vault-eight.vercel.app","http://localhost:5173"], credentials: true }));
 
@@ -27,30 +33,127 @@ app.listen(3000, () => console.log("Listening on PORT 3000"));
 
 const processContentLink = (link: string, type: string): string => {
   if (type === 'youtube') {
-    // Regex to capture the video ID from all common YouTube URL formats
     const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
     const match = link.match(youtubeRegex);
-    // If a valid video ID is found, create a clean embed link
     if (match && match[1]) {
       return `https://www.youtube.com/embed/${match[1]}`;
     }
-    // If no match is found, return the original link as a fallback
     return link;
   }
   if (type === 'twitter') {
-    // Make the replacement for x.com more specific
     return link.replace('//x.com', '//twitter.com');
   }
-  // For all other types ('article', 'note', etc.), return the original link
   return link;
 };
 
+//google-auth
+app.post('/api/v1/auth/google',async (req:Request,res:Response) => {
+  try {
+    const token=req.body.token
+    if(!token){
+      res.status(404).json({success:false,message:"Token is required"})
+      
+    }
+    const ticket=await client.verifyIdToken({
+      idToken:token,
+      audience:GOOGLE_CLIENT_ID
+    })
 
-// User Signup
-app.post('/api/v1/register', async (req: Request, res: Response): Promise<any> => {
+    const payload=ticket.getPayload()
+    if (!payload) {
+      res.status(401).json({ message: "Invalid Google token" });
+      return
+    }
+    const { email, sub: googleId, name } = payload
+
+     let user = await User.findOne({ googleId });
+
+    if (!user) {
+      const baseUsername =
+        email?.split("@")[0].replace(/\W+/g, "").toLowerCase() ||
+        (name || '').replace(/\s+/g, "").toLowerCase();
+
+      let username = baseUsername;
+      let count = 1;
+
+      while (await User.findOne({ username })) {
+        username = `${baseUsername}${count++}`; // john → john1 → john2 ...
+      }
+
+      user = await User.create({
+        username,
+        email,
+        googleId,
+        password: null,
+      });
+    }
+       const jwtToken = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET!, { expiresIn: "24h" });
+   
+      
+      res.cookie('token', jwtToken,{
+        httpOnly:true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      });
+
+     res.status(200).json({ message: "Google Registration successful",success:true });
+      return
+
+  } catch (error) {
+    console.error("Google auth error:", error);
+    res.status(500).json({ message: "Google authentication failed"});
+  }
+})
+
+
+app.post('/api/v1/auth/google/login',async (req:Request,res:Response) => {
+  try {
+    const token=req.body.token
+    if(!token){
+      res.status(404).json({message:"Token is required"})
+      return
+    }
+    const client=new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+    const ticket=await client.verifyIdToken({
+      idToken:token,
+      audience:process.env.GOOGLE_CLIENT_ID
+    })
+    const payload=ticket.getPayload()
+     if (!payload) {
+       res.status(401).json({ message: "Invalid Google token" });
+       return
+    }
+    const { sub: googleId } = payload;
+   const user = await User.findOne({ googleId });
+    if (!user) {
+      res.status(404).json({ message: "User not registered with Google" });
+      return
+    }
+      const jwtToken = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET!, { expiresIn: "24h" });
+
+    // Set cookie (same as registration)
+    res.cookie('token', jwtToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
+
+    res.status(200).json({ message: "Google login successful", success: true });
+
+
+
+  } catch (error) {
+     console.error("Google login error:", error);
+    res.status(500).json({ message: "Google authentication failed",});
+  }
+})
+
+
+app.post('/api/v1/register', async (req: Request, res: Response) => {
   try {
     const userSchema = z.object({
       username: z.string().min(3, 'Username should be at least 3 characters'),
+      email:z.string().email("Invalid Email address"),
       password: z.string()
         .min(8, 'Password must be at least 8 characters')
         .regex(/[a-z]/, 'Password must contain a lowercase letter')
@@ -59,20 +162,30 @@ app.post('/api/v1/register', async (req: Request, res: Response): Promise<any> =
 
     const userData = userSchema.safeParse(req.body);
     if (!userData.success) {
-      return res.status(411).json({ error: userData.error });
+      res.status(411).json({ error: userData.error });
+      return
     }
 
-    const { username, password } = userData.data;
-    const existingUser = await User.findOne({ username });
+    const { username,email, password } = userData.data;
+     const existingUser = await User.findOne({
+      $or: [{ username }, { email }]
+    });
     if (existingUser) {
-      return res.status(403).json({ message: "User already exists" });
+      res.status(403).json({
+        message: existingUser.username === username
+          ? "Username already exists"
+          : "Email already exists"
+      });
+      return
     }
 
     const hashedPass = await bcrypt.hash(password, 12);
-    const newUser = await User.create({ username, password: hashedPass });
+    const newUser = await User.create({ username,email, password: hashedPass });
     await Brain.create({ userId: newUser._id });
-
+    const token = jwt.sign({ _id: newUser._id }, process.env.TOKEN_SECRET!, { expiresIn: "24h" });
+    res.cookie('token', token, { httpOnly: true, secure: true,sameSite:"none" });
     res.status(200).json({ message: "New user created" });
+    
   } catch (error) {
     res.status(500).json({ error: error });
   }
@@ -98,12 +211,35 @@ app.post("/api/v1/login", async (req: Request, res: Response): Promise<any> => {
   }
 });
 
+
+
+
 // User Logout
 app.post('/api/v1/logout', authMiddleware, async (req: Request, res: Response) => {
   try {
     res.clearCookie('token', { httpOnly: true, secure: true });
     res.status(200).json({ message: "Logged out" });
   } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+app.get('/api/v1/user/profile', authMiddleware, async (req: Request, res: Response):Promise<any> => {
+  try {
+    //@ts-ignore
+    const userId = req.user._id;
+
+    // Fetch user data
+    const user = await User.findById(userId).select('-password'); // exclude password
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Fetch user's content
+    const content = await ContentModel.find({ userId }).populate('userId', 'username');
+
+    res.status(200).json({ success: true, user, content });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
     res.status(500).json({ error });
   }
 });
@@ -142,9 +278,7 @@ app.get('/api/v1/user/checkAuth', authMiddleware, async (req: Request, res: Resp
   }
 });
 
-/**
- * 2. Patched "Add Content" Endpoint
- */
+
 app.post('/api/v1/content/add', authMiddleware, async (req: Request, res: Response): Promise<any> => {
   try {
     const { title, link, type, tags } = req.body;
@@ -183,7 +317,6 @@ app.post('/api/v1/content/add', authMiddleware, async (req: Request, res: Respon
   }
 });
 
-// View Content
 app.get('/api/v1/content/view', authMiddleware, async (req: Request, res: Response) => {
   try {
     //@ts-ignore
@@ -354,22 +487,3 @@ app.get('/api/v1/brain/:shareLink', async (req: Request, res: Response):Promise<
 
 
 // Get User Profile with Content
-app.get('/api/v1/user/profile', authMiddleware, async (req: Request, res: Response):Promise<any> => {
-  try {
-    //@ts-ignore
-    const userId = req.user._id;
-
-    // Fetch user data
-    const user = await User.findById(userId).select('-password'); // exclude password
-
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    // Fetch user's content
-    const content = await ContentModel.find({ userId }).populate('userId', 'username');
-
-    res.status(200).json({ success: true, user, content });
-  } catch (error) {
-    console.error("Error fetching profile:", error);
-    res.status(500).json({ error });
-  }
-});

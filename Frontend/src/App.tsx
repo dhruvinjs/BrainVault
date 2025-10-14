@@ -10,10 +10,27 @@ import {
   Register
 } from "./Pages";
 import { ProtectedLayout } from "./Components/ProtectedLayout";
+import { Toaster } from "react-hot-toast";
 function App() {
   return (
     <BrowserRouter>
-   
+      <Toaster
+        position="top-right" 
+        toastOptions={{
+          success: {
+            style: {
+              background: "#4ade80",
+              color: "#000",
+            },
+          },
+          error: {
+            style: {
+              background: "#f87171",
+              color: "#000",
+            },
+          },
+        }}
+      />
       <Routes>
         <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />

@@ -13,8 +13,9 @@ export const GoogleButton = ({ onClick, disabled, isLoading }: GoogleButtonProps
             disabled={disabled || isLoading}
             className={`
                 flex items-center justify-center gap-2 w-full max-w-xs 
+                cursor-pointer 
                 bg-white text-gray-700 border border-gray-300 rounded-md 
-                hover:bg-gray-100 transition-colors font-medium px-4 py-2 
+                hover:bg-gray-300 transition-colors font-medium px-4 py-2 
                 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed
             `}
         >

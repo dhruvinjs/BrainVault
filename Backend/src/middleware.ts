@@ -24,6 +24,7 @@ export const authMiddleware=async (req:Request,res:Response,next:NextFunction) =
     } catch (error) {
         res.status(404).json({error:error})
         console.log(error);
+        return
     }
 
 }

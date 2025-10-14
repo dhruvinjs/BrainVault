@@ -1,12 +1,11 @@
+import { GoogleLogin } from '@react-oauth/google';
+import { useGoogleRegisterMutation,useRegisterMutation } from "../hooks/useAuthQueries";
 import { motion } from 'framer-motion';
 import { useRef } from 'react';
 import { User, Lock, ArrowLeft, X, Mail } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { z } from 'zod';
-import { useRegisterMutation } from '../hooks/useAuthQueries';
-import { toast } from 'react-hot-toast';
-import { GoogleButton } from '../Components';
-
+import toast from 'react-hot-toast';
 const userSchema = z.object({
   username: z.string().min(3, 'Username should be at least 3 characters'),
   email: z.string().email('Invalid email'),
@@ -30,7 +29,8 @@ export function Register() {
   const confirmPasswordRef = useRef<HTMLInputElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
   const { mutateAsync: registerUser } = useRegisterMutation();
-  const navigate=useNavigate()
+  // const navigate=useNavigate()
+  const { mutateAsync: googleRegister } = useGoogleRegisterMutation();
   const updatePasswordRequirements = () => {
     const password = passwordRef.current?.value || '';
 
@@ -74,7 +74,7 @@ export function Register() {
     });
   };
 
-   const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
 
@@ -82,7 +82,7 @@ export function Register() {
       username: usernameRef.current?.value || '',
       email: emailRef.current?.value || '',
       password: passwordRef.current?.value || '',
-      confirmPassword: confirmPasswordRef.current?.value || ''
+      confirmPassword: confirmPasswordRef.current?.value || '',
     };
 
     if (formData.password !== formData.confirmPassword) {
@@ -90,42 +90,46 @@ export function Register() {
       return;
     }
 
- const result = userSchema.safeParse(formData);
-if (!result.success) {
-  const zodError = result.error; // TypeScript now knows this is a ZodError
-  zodError.issues.forEach((err) => {
-    if (err.path[0]) {
-      showError(err.path[0] as string, err.message);
-    }
-  });
-  return;
-}
-
-
-
-    try {
-      if (submitButtonRef.current) submitButtonRef.current.disabled = true;
-
-      await registerUser({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
+    const result = userSchema.safeParse(formData);
+    if (!result.success) {
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) showError(err.path[0] as string, err.message);
       });
-
-      toast.success('Account created successfully!');
-      setTimeout(() => navigate('/login'), 1500);
-    } catch (error: any) {
-      const msg = error?.response?.data?.message || 'Registration failed';
-      toast.error(msg);
-    } finally {
-      if (submitButtonRef.current) submitButtonRef.current.disabled = false;
+      return;
     }
+
+    if (submitButtonRef.current) submitButtonRef.current.disabled = true;
+
+    await registerUser({
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+    });
+
+    if (submitButtonRef.current) submitButtonRef.current.disabled = false;
   };
 
 
-  const handleGoogleRegister = () => {
-    console.log('Google registration triggered');
-  };
+// const handleGoogleRegister = useGoogleLogin({
+//   onSuccess: async (tokenResponse) => {
+//     try {
+//       const accessToken = tokenResponse.access_token;
+
+//       if (!accessToken) {
+//         toast.error("Failed to get Google token");
+//         return;
+//       }
+
+//     await googleRegister(accessToken)
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Google registration failed");
+//     }
+//   },
+//   onError: () => {
+//     toast.error("Google Sign-In failed");
+//   },
+// });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 px-6 py-12">
@@ -265,9 +269,29 @@ if (!result.success) {
           </div>
 
           {/* Google Button */}
-          <div className="flex justify-center">
-            <GoogleButton onClick={handleGoogleRegister} />
-          </div>
+              <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  try {
+                    const idToken = credentialResponse.credential; // ✅ This is the JWT (ID Token)
+                    if (!idToken) {
+                      toast.error("Failed to get Google ID token");
+                      return;
+                    }
+
+                    // Send to your backend via react-query mutation
+                    await googleRegister(idToken);
+                  } catch (err) {
+                    console.error(err);
+                    toast.error("Google registration failed");
+                  }
+                }}
+                onError={() => {
+                  toast.error("Google Sign-In failed");
+                }}
+              />
+            </div>
+
 
           <p className="text-center mt-6 text-slate-600 dark:text-slate-400">
             Already have an account?{' '}
