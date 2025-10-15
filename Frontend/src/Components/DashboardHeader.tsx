@@ -8,7 +8,7 @@ import { useLogoutMutation } from '../hooks/useAuthQueries';
 import { toast } from 'react-hot-toast';
 import { useProfileQueries } from '../hooks/useProfileQueries';
 import { PasteBrainLinkModal } from './PasteBrainLinkModal';
-
+// import { useShareBrainMutation } from '../hooks/useBrainQueries';
 interface FilterOption {
   id: string;
   label: string;
@@ -43,7 +43,7 @@ export function DashboardHeader({
   const { useGetProfile } = useProfileQueries();
   const { data: profileData, isLoading: isProfileLoading } = useGetProfile();
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation();
-
+  
   const handleLogout = () => {
     logout(undefined, {
       onSuccess: () => {
@@ -140,7 +140,7 @@ export function DashboardHeader({
                   <Share2 size={14} />
                 )}
                 <span className="hidden md:inline">
-                  {isBrainPublic ? 'Private' : 'Share'}
+                  {isBrainPublic ? 'Make Private' : 'Share'}
                 </span>
               </motion.button>
 

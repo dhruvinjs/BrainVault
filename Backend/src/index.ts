@@ -442,18 +442,42 @@ app.patch('/api/v1/brain/share', authMiddleware, async (req: Request, res: Respo
       await Link.deleteOne({ userId });
       brain.share = false;
       await brain.save();
-      return res.status(200).json({ message: "Link removed" });
+   if (share === false) {
+      await Link.deleteOne({ userId });
+      brain.share = false;
+      await brain.save();
+
+      res.status(200).json({
+        success: true,
+        public: false,
+        message: "Your brain is now private. The previous link is no longer valid.",
+      });
+      return
+    }
     }
 
     const existingLink = await Link.findOne({ userId });
-    if (existingLink) return res.status(200).json({ success: true, link: existingLink.hash });
+    if (existingLink) {
+      res.status(200).json({ success: true, 
+        link: existingLink.hash,
+        message: "Your brain is already public.",
+
+      });
+      return
+    } 
 
     const hash = crypto.randomBytes(16).toString("hex");
     brain.share = true;
     await brain.save();
     await Link.create({ hash, userId });
 
-    res.status(200).json({ success: true, link: hash });
+  
+    res.status(200).json({
+      success: true,
+      public: true,
+      link: hash,
+      message: "Your brain is now public.",
+    });
     return
   } catch (error) {
     res.status(500).json({ error: error });
@@ -472,7 +496,10 @@ app.get('/api/v1/brain/:shareLink', async (req: Request, res: Response):Promise<
 
     // Find the link record
     const linkRecord = await Link.findOne({ hash: shareLink });
-    if (!linkRecord) return res.status(404).json({ message: "Link not found" });
+    if (!linkRecord){
+       res.status(404).json({ success:false,private:true,message: "Link not found Or Brain Is Private", });
+       return
+    }
 
     // Find brain and populate content
     const brain = await Brain.findOne({ userId: linkRecord.userId }).populate('content');

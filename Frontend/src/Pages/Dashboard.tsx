@@ -9,7 +9,7 @@ import { AddEditModal, DashboardHeader, ConfirmModal, ShareBrainModal } from '..
 interface Post extends Content {}
 
 export function DashBoard() {
-  // CONTENT QUERIES
+  // --- CONTENT QUERIES ---
   const { useGetContents, useDeleteContent, useToggleStar, useCreateContent, useUpdateContent } = useContentQueries();
   const { data: posts = [], isLoading: isInitialLoading } = useGetContents();
   const { mutate: deleteContent, isPending: isDeleting, variables: deletingId } = useDeleteContent();
@@ -17,10 +17,10 @@ export function DashBoard() {
   const { mutate: createContent, isPending: isCreating } = useCreateContent();
   const { mutate: updateContent, isPending: isUpdating } = useUpdateContent();
 
-  // BRAIN SHARE MUTATION
+  // --- BRAIN SHARE MUTATION ---
   const { mutate: shareBrain, isPending: isSharing } = useShareBrainMutation();
 
-  // CONTENT STATES
+  // --- CONTENT STATES ---
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -28,14 +28,13 @@ export function DashBoard() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
-  // SHARE STATES
+  // --- SHARE STATES ---
   const [showShareConfirm, setShowShareConfirm] = useState(false);
-  const [pendingShareAction, setPendingShareAction] = useState<'enable' | 'disable' | null>(null);
   const [isBrainPublic, setIsBrainPublic] = useState(false);
   const [shareableLink, setShareableLink] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
 
-  // DELETE HANDLERS
+  // --- DELETE HANDLERS ---
   const handleDeletePost = (id: string) => {
     setPostToDelete(id);
     setShowConfirmModal(true);
@@ -47,7 +46,7 @@ export function DashBoard() {
     setShowConfirmModal(false);
   };
 
-  // CONTENT HANDLERS
+  // --- CONTENT HANDLERS ---
   const handleToggleStar = (id: string, is_starred: boolean) => toggleStar({ id, is_starred });
 
   const handleSavePost = (data: CreateContentData) => {
@@ -57,15 +56,18 @@ export function DashBoard() {
     setEditingPost(null);
   };
 
-  // SHARE HANDLERS
+  // --- SHARE HANDLERS ---
   const handleShareClick = () => {
-    const action = isBrainPublic ? 'disable' : 'enable';
-    setPendingShareAction(action);
-    setShowShareConfirm(true);
+    if (isBrainPublic) {
+      // Confirm before making private
+      setShowShareConfirm(true);
+    } else {
+      toggleBrainPrivacy();
+    }
   };
 
-  const confirmShareBrain = () => {
-    const willShare = pendingShareAction === 'enable';
+  const toggleBrainPrivacy = () => {
+    const willShare = !isBrainPublic;
 
     shareBrain(willShare, {
       onSuccess: (data) => {
@@ -86,10 +88,9 @@ export function DashBoard() {
     });
 
     setShowShareConfirm(false);
-    setPendingShareAction(null);
   };
 
-  // FILTER HELPER
+  // --- FILTER HELPER ---
   const filteredPosts = posts.filter((post) => {
     const matchesFilter = filter === 'all' || post.type === filter || (filter === 'starred' && post.is_starred);
     const matchesSearch =
@@ -191,7 +192,7 @@ export function DashBoard() {
                               key={idx}
                               className="px-3 py-1 bg-white/60 dark:bg-slate-800/60 rounded-full text-xs text-slate-700 dark:text-slate-300 font-medium"
                             >
-                              {tag}
+                              #{tag}
                             </span>
                           ))}
                         </div>
@@ -243,11 +244,7 @@ export function DashBoard() {
             </motion.div>
 
             {!isInitialLoading && filteredPosts.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center py-16"
-              >
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
                 <div className="text-slate-400 dark:text-slate-600 mb-4">
                   <FileText size={64} className="mx-auto" />
                 </div>
@@ -274,15 +271,11 @@ export function DashBoard() {
       <ConfirmModal
         open={showShareConfirm}
         setOpen={setShowShareConfirm}
-        onConfirm={confirmShareBrain}
-        title={pendingShareAction === 'enable' ? 'Make Brain Public' : 'Make Brain Private'}
-        message={
-          pendingShareAction === 'enable'
-            ? 'Your brain will be publicly accessible via a shareable link. Anyone with the link can view your content.'
-            : 'Your brain will be made private. The current share link will be deactivated.'
-        }
-        confirmText={pendingShareAction === 'enable' ? 'Make Public' : 'Make Private'}
-        variant={pendingShareAction === 'enable' ? 'primary' : 'danger'}
+        onConfirm={toggleBrainPrivacy}
+        title="Make Brain Private"
+        message="Your brain will be made private. The current share link will be deactivated."
+        confirmText="Make Private"
+        variant="danger"
       />
 
       {/* ADD / EDIT MODAL */}
@@ -301,13 +294,7 @@ export function DashBoard() {
       </AnimatePresence>
 
       {/* SHARE LINK MODAL */}
-      <ShareBrainModal
-        open={showShareModal}
-        setOpen={setShowShareModal}
-        link={shareableLink}
-        error={null}
-        isLoading={false}
-      />
+      <ShareBrainModal open={showShareModal} setOpen={setShowShareModal} link={shareableLink} error={null} isLoading={false} />
     </div>
   );
 }

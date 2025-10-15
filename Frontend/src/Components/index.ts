@@ -1,5 +1,3 @@
-export { GoogleButton } from './GoogleButton';
-export { InputBoxes } from './Input';
 export { ShareBrainModal } from './ShareBrainModal';
 export { PasteBrainLinkModal } from './PasteBrainLinkModal';
 export { Footer } from './Footer';
@@ -9,4 +7,4 @@ export  { Button } from './Button';
 export  { LoadingScreen } from './LoadingScreen';
 export {ConfirmModal} from './ConfirmModal'
 export {DashboardHeader} from './DashboardHeader'
-export {AddEditModal} from './AddContentModal'
+export {AddEditModal} from './AddEditModal'
