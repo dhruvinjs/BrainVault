@@ -66,8 +66,6 @@ export function Landing() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 transition-colors duration-300">
-      {/* Theme Toggle */}
-     
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-20 pb-32 px-6">

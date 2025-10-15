@@ -7,7 +7,8 @@ import {
   Profile,
 
   Login,
-  Register
+  Register,
+  About
 } from "./Pages";
 import { ProtectedLayout } from "./Components/ProtectedLayout";
 import { Toaster } from "react-hot-toast";
@@ -35,6 +36,7 @@ function App() {
         <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/about" element={<About />} />
 
         <Route element={<ProtectedLayout />}>
           <Route path="/dashboard" element={<DashBoard />} />

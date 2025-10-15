@@ -4,3 +4,4 @@ export { Register } from './Register';
 export { Profile } from './Profile';
 export { AnotherBrain } from './AnotherBrain';
 export {  DashBoard } from './Dashboard';
+export {About} from './About'

@@ -17,50 +17,63 @@ export function About() {
             className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 mb-6 transition-colors text-sm"
           >
             <ArrowLeft size={18} />
-            <span>Back to home</span>
+            <span>Back to Home</span>
           </Link>
 
+          {/* Profile Section */}
           <div className="text-center mb-8">
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-              className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-slate-600 rounded-full flex items-center justify-center"
+              initial={{ rotate: 0 }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+              className="w-28 h-28 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-slate-600 p-[3px]"
             >
-              <User className="w-12 h-12 text-white" />
+              <div className="w-full h-full rounded-full bg-white dark:bg-slate-800 flex items-center justify-center">
+                <User className="w-12 h-12 text-blue-500 dark:text-blue-400" />
+              </div>
             </motion.div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-800 dark:text-slate-100">
-              About the Developer
+
+            <h1 className="text-3xl sm:text-4xl font-bold mb-1 text-slate-800 dark:text-slate-100">
+              Dhruvin J Soni
             </h1>
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
-              Building the future, one project at a time
+              Full-Stack Developer | Passionate about building real-world systems
             </p>
           </div>
 
+          {/* Content Cards */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="space-y-6"
           >
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6 border border-slate-200 dark:border-slate-600">
+            {/* About Project */}
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-sm"
+            >
               <h2 className="text-xl font-semibold mb-3 text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <Code2 size={24} className="text-blue-500" />
-                About This Project
+                About BrainVault
               </h2>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                This is a modern second brain application built with React, TypeScript, and Tailwind CSS.
-                It features a beautiful UI with smooth animations, dark mode support, and a focus on user experience.
-                The project demonstrates clean code architecture, responsive design principles, and modern web development practices.
+                BrainVault is your personal digital memory vault — a place to store tweets, YouTube videos, and notes 
+                you want to revisit later. Built with <strong>React</strong>, <strong>TypeScript</strong>, and <strong>Node.js</strong>, 
+                it features smooth animations, a secure OAuth2 backend, and intuitive UI designed with <strong>Framer Motion</strong>.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6 border border-slate-200 dark:border-slate-600">
+            {/* Tech Stack */}
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-sm"
+            >
               <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-slate-100">
                 Tech Stack
               </h2>
               <div className="flex flex-wrap gap-2">
-                {['React', 'TypeScript', 'Tailwind CSS', 'Vite', 'Framer Motion', 'Zustand', 'React Query'].map((tech, index) => (
+                {['React', 'TypeScript', 'Tailwind CSS', 'Vite', 'Framer Motion', 'React Query', 'Node.js', 'Express', 'MongoDB'].map((tech, index) => (
                   <motion.span
                     key={tech}
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -72,9 +85,13 @@ export function About() {
                   </motion.span>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6 border border-slate-200 dark:border-slate-600">
+            {/* Connect Section */}
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-sm"
+            >
               <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-slate-100">
                 Connect With Me
               </h2>
@@ -82,47 +99,47 @@ export function About() {
                 <motion.a
                   whileHover={{ scale: 1.02, x: 4 }}
                   whileTap={{ scale: 0.98 }}
-                  href="https://github.com/yourusername/your-repo"
+                  href="https://github.com/dhruvinjs/BrainVault"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-lg hover:border-slate-300 dark:hover:border-slate-400 transition-colors group"
+                  className="flex items-center gap-3 p-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-lg hover:border-blue-400 dark:hover:border-blue-400 transition-colors group"
                 >
-                  <Github className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
+                  <Github className="w-5 h-5 text-slate-700 dark:text-slate-300 group-hover:text-blue-500 transition-colors" />
                   <div className="flex-1">
-                    <div className="font-medium text-slate-800 dark:text-slate-100">GitHub Repository</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">View source code and contribute</div>
+                    <div className="font-medium text-slate-800 dark:text-slate-100">GitHub</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">View BrainVault source code</div>
                   </div>
                 </motion.a>
 
                 <motion.a
                   whileHover={{ scale: 1.02, x: 4 }}
                   whileTap={{ scale: 0.98 }}
-                  href="mailto:your.email@example.com"
-                  className="flex items-center gap-3 p-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-lg hover:border-slate-300 dark:hover:border-slate-400 transition-colors group"
+                  href="mailto:dhruvinjs.me@gmail.com"
+                  className="flex items-center gap-3 p-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-lg hover:border-blue-400 dark:hover:border-blue-400 transition-colors group"
                 >
-                  <Mail className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-500 transition-colors" />
+                  <Mail className="w-5 h-5 text-slate-700 dark:text-slate-300 group-hover:text-blue-500 transition-colors" />
                   <div className="flex-1">
                     <div className="font-medium text-slate-800 dark:text-slate-100">Email</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">your.email@example.com</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">dhruvinsoni.js@gmail.com</div>
                   </div>
                 </motion.a>
 
                 <motion.a
                   whileHover={{ scale: 1.02, x: 4 }}
                   whileTap={{ scale: 0.98 }}
-                  href="https://linkedin.com/in/yourprofile"
+                  href="https://linkedin.com/in/dhruvinjsoni"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-lg hover:border-slate-300 dark:hover:border-slate-400 transition-colors group"
+                  className="flex items-center gap-3 p-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-lg hover:border-blue-400 dark:hover:border-blue-400 transition-colors group"
                 >
-                  <Linkedin className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-600 transition-colors" />
+                  <Linkedin className="w-5 h-5 text-slate-700 dark:text-slate-300 group-hover:text-blue-600 transition-colors" />
                   <div className="flex-1">
                     <div className="font-medium text-slate-800 dark:text-slate-100">LinkedIn</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">Connect professionally</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Connect with me professionally</div>
                   </div>
                 </motion.a>
               </div>
-            </div>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0 }}
@@ -131,7 +148,7 @@ export function About() {
               className="text-center pt-4"
             >
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                Made with passion and lots of coffee
+                Crafted with ❤️ by Dhruvin J Soni
               </p>
             </motion.div>
           </motion.div>
